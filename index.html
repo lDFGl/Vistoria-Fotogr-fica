@@ -2,31 +2,148 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Relatório Fotográfico de Vistoria</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Vistoria Fotográfica - Sistema de Auditoria</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     :root {
-      --primary-color: #135C6C;
+      --primary: #135C6C;
+      --primary-dark: #0e4450;
+      --bg-gray: #f4f6f8;
+      --border-color: #cbd5e1;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 20px;
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-gray);
       color: #333;
     }
 
-    /* Cabeçalho do Relatório */
+    .app-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 15px;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      color: var(--primary);
+      margin-top: 0;
+      font-size: 20px;
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 8px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 6px;
+    }
+
+    input[type="text"], select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 110px;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .row > div {
+      flex: 1;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.2s;
+    }
+
+    .btn:hover {
+      background-color: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      background-color: #64748b;
+    }
+
+    .btn-secondary:hover {
+      background-color: #475569;
+    }
+
+    .gps-status {
+      font-size: 12px;
+      color: #059669;
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    /* Estilos da Folha do Relatório Final */
+    #reportPreview {
+      display: none;
+      background: #fff;
+      padding: 30px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+    }
+
     .header-container {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      border-bottom: 2px solid var(--primary-color);
+      border-bottom: 2px solid var(--primary);
       padding-bottom: 12px;
       margin-bottom: 20px;
     }
 
     .header-title {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: bold;
       color: #111;
       text-transform: uppercase;
@@ -34,25 +151,25 @@
     }
 
     .header-subtitle {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: bold;
-      color: var(--primary-color);
+      color: var(--primary);
       margin: 4px 0;
+      text-transform: uppercase;
     }
 
     .header-location {
       font-size: 13px;
-      color: var(--primary-color);
+      color: var(--primary);
       font-weight: 600;
       margin-top: 4px;
     }
 
     .logo-container img {
-      max-width: 140px;
+      max-width: 130px;
       height: auto;
     }
 
-    /* Cartão do Auditor */
     .auditor-card {
       background-color: #f8f9fa;
       border: 1px solid #e2e8f0;
@@ -77,12 +194,11 @@
       color: #1e293b;
     }
 
-    /* Registo de Foto */
     .section-title {
-      font-size: 18px;
+      font-size: 17px;
       font-weight: bold;
-      color: var(--primary-color);
-      margin-bottom: 12px;
+      color: var(--primary);
+      margin-bottom: 14px;
       border-bottom: 1px solid #cbd5e1;
       padding-bottom: 6px;
     }
@@ -105,8 +221,8 @@
     }
 
     .photo-card-header .ambiente {
-      color: var(--primary-color);
-      background-color: rgba(255, 255, 255, 0.9);
+      color: var(--primary);
+      background-color: #ffffff;
       padding: 2px 8px;
       border-radius: 4px;
     }
@@ -118,8 +234,8 @@
     }
 
     .photo-card-body img {
-      width: 280px;
-      height: 210px;
+      width: 300px;
+      height: 225px;
       object-fit: cover;
       border-radius: 6px;
     }
@@ -131,18 +247,11 @@
       gap: 8px;
     }
 
-    .photo-info p {
-      margin: 0;
-      font-size: 13px;
-    }
-
-    /* Caixa Expandida de Observações */
     .obs-box {
       background-color: #f8f9fa;
       border: 1px solid #e2e8f0;
       border-radius: 6px;
       padding: 12px;
-      min-height: 100px;
       flex: 1;
     }
 
@@ -157,74 +266,270 @@
       color: #1e293b;
       white-space: pre-wrap;
     }
+
+    @media (max-width: 600px) {
+      .row { flex-direction: column; gap: 0; }
+      .photo-card-body { flex-direction: column; }
+      .photo-card-body img { width: 100%; height: auto; }
+      .header-container { flex-direction: column-reverse; gap: 10px; }
+    }
   </style>
 </head>
 <body>
 
-  <!-- Cabeçalho do Relatório -->
-  <div class="header-container">
-    <div>
-      <h1 class="header-title">Relatório Fotográfico de Vistoria</h1>
-      <div class="header-subtitle" id="displayEmpreendimento">
-        EMPREENDIMENTO: SAPPHIRE TOWER – FG & SORDI MOVELARIA
+  <div class="app-container">
+    
+    <!-- Formulário de Entrada -->
+    <div id="formContainer" class="card">
+      <h2>Nova Vistoria Fotográfica</h2>
+
+      <div class="form-group">
+        <label>Empreendimento:</label>
+        <input type="text" id="inputEmpreendimento" value="SAPPHIRE TOWER – FG & SORDI MOVELARIA">
       </div>
-      <div class="header-location" id="displayHeaderMeta">
-        07/10/2026, 10:40:20 — Rua 1500, Balneário Camboriú - SC
-      </div>
-    </div>
-    <div class="logo-container">
-      <img src="logo-fg.png" alt="FG Empreendimentos">
-    </div>
-  </div>
 
-  <!-- Dados do Auditor -->
-  <div class="auditor-card">
-    <div>
-      <p class="label">Vistoriador / Auditor:</p>
-      <p class="value">Auditor Técnico</p>
-    </div>
-    <div>
-      <p class="label">Empresa / Departamento:</p>
-      <p class="value">Auditoria Interna / Qualidade</p>
-    </div>
-  </div>
-
-  <!-- Registos Fotograficos -->
-  <div class="section-title">Registos e Evidências Fotográficas (1)</div>
-
-  <div class="photo-card">
-    <div class="photo-card-header">
-      <span>#1 - Pavimento: 01 TÉRREO</span>
-      <span class="ambiente">Ambiente: Geral</span>
-    </div>
-    <div class="photo-card-body">
-      <img src="exemplo-foto.jpg" alt="Foto da Vistoria">
-      <div class="photo-info">
-        <p><strong>Data/Hora do Registo:</strong> 07/10/2026, 10:40:15</p>
-        <p><strong>Localização:</strong> Rua 1500, Balneário Camboriú - SC</p>
-
-        <!-- Área Maior de Observações -->
-        <div class="obs-box">
-          <strong>Observações / Apontamentos:</strong>
-          <div class="obs-content">Verificação do estado geral do pavimento térreo. Apontamentos e notas detalhadas de auditoria técnica.</div>
+      <div class="row">
+        <div class="form-group">
+          <label>Vistoriador / Auditor:</label>
+          <input type="text" id="inputAuditor" value="Auditor Técnico">
+        </div>
+        <div class="form-group">
+          <label>Empresa / Departamento:</label>
+          <input type="text" id="inputEmpresa" value="Auditoria Interna / Qualidade">
         </div>
       </div>
+
+      <div class="row">
+        <div class="form-group">
+          <label>Pavimento:</label>
+          <select id="selectPavimento">
+            <option value="01 TÉRREO">01 TÉRREO</option>
+            <option value="02 GARAGEM G1">02 GARAGEM G1</option>
+            <option value="03 GARAGEM G2">03 GARAGEM G2</option>
+            <option value="04 GARAGEM G3">04 GARAGEM G3</option>
+            <option value="05 LAZER ROOFTOP">05 LAZER ROOFTOP</option>
+            <option value="06 APARTAMENTO TIPO">06 APARTAMENTO TIPO</option>
+            <option value="55 ROOFTOP">55 ROOFTOP</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Ambiente / Cômodo:</label>
+          <input type="text" id="inputAmbiente" value="Geral" placeholder="Ex: Cozinha, Suíte Master">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Localização Atual (Obtida pelo GPS):</label>
+        <input type="text" id="inputLocalizacao" readonly placeholder="A obter localização GPS...">
+        <div class="gps-status" id="gpsStatus">📍 A obter endereço aproximado pelo GPS...</div>
+      </div>
+
+      <div class="form-group">
+        <label>Adicionar Foto com Marca D'água:</label>
+        <input type="file" id="fileCamera" accept="image/*" capture="environment" style="display:none;">
+        <button type="button" class="btn" onclick="document.getElementById('fileCamera').click()">
+          📷 Tirar Foto / Selecionar da Galeria
+        </button>
+      </div>
+
+      <div class="form-group">
+        <label>Observações / Apontamentos:</label>
+        <textarea id="inputObservacoes" placeholder="Digite aqui os apontamentos, não conformidades ou observações técnicas..."></textarea>
+      </div>
+
+      <div class="form-group" style="margin-top: 20px;">
+        <button type="button" class="btn" onclick="gerarRelatorio()">📄 Gerar e Visualizar Relatório</button>
+      </div>
     </div>
+
+    <!-- Visualização do Relatório Final -->
+    <div id="reportPreview">
+      <div class="header-container">
+        <div>
+          <h1 class="header-title">Relatório Fotográfico de Vistoria</h1>
+          <div class="header-subtitle" id="displayEmpreendimento"></div>
+          <div class="header-location" id="displayHeaderMeta"></div>
+        </div>
+        <div class="logo-container">
+          <img src="logo-fg.png" alt="FG Empreendimentos" onerror="this.src='logo-fg.png.png'">
+        </div>
+      </div>
+
+      <div class="auditor-card">
+        <div>
+          <p class="label">Vistoriador / Auditor:</p>
+          <p class="value" id="displayAuditor"></p>
+        </div>
+        <div>
+          <p class="label">Empresa / Departamento:</p>
+          <p class="value" id="displayEmpresa"></p>
+        </div>
+      </div>
+
+      <div class="section-title" id="displayTotalFotos">Registos e Evidências Fotográficas (0)</div>
+
+      <div id="photosList"></div>
+
+      <div style="margin-top: 25px; display: flex; gap: 10px;">
+        <button class="btn btn-secondary" onclick="voltarEdicao()">✏️ Voltar / Editar</button>
+        <button class="btn" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+      </div>
+    </div>
+
   </div>
 
   <script>
-    // Função para atualizar Rua e Cidade através de Lat/Lng (Geocoding API / Nominatim)
-    async function obterRuaECidade(lat, lon) {
-      try {
-        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
-        const data = await response.json();
-        const rua = data.address.road || data.address.pedestrian || "Rua não identificada";
-        const cidade = data.address.city || data.address.town || data.address.municipality || "Cidade não identificada";
-        const uf = data.address.state_code || "";
-        return `${rua}, ${cidade}${uf ? ' - ' + uf : ''}`;
-      } catch (e) {
-        return `${lat}, ${lon}`;
+    let fotosGuardadas = [];
+    let enderecoAtual = "Balneário Camboriú - SC";
+    let latAtual = null;
+    let lonAtual = null;
+
+    // Obter localização do dispositivo e converter via Geocoding
+    window.addEventListener('load', () => {
+      obterLocalizacao();
+    });
+
+    function obterLocalizacao() {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+          latAtual = pos.coords.latitude;
+          lonAtual = pos.coords.longitude;
+          document.getElementById('gpsStatus').innerText = `📍 GPS: ${latAtual.toFixed(5)}, ${lonAtual.toFixed(5)} (Convertendo endereço...)`;
+          
+          try {
+            const resp = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latAtual}&lon=${lonAtual}`);
+            const data = await resp.json();
+            const rua = data.address.road || data.address.pedestrian || "Rua Local";
+            const cidade = data.address.city || data.address.town || data.address.municipality || "Balneário Camboriú";
+            const uf = data.address.state_code || "SC";
+            enderecoAtual = `${rua}, ${cidade} - ${uf}`;
+            document.getElementById('inputLocalizacao').value = enderecoAtual;
+            document.getElementById('gpsStatus').innerText = `📍 Endereço: ${enderecoAtual}`;
+          } catch (e) {
+            enderecoAtual = `Balneário Camboriú - SC (${latAtual.toFixed(4)}, ${lonAtual.toFixed(4)})`;
+            document.getElementById('inputLocalizacao').value = enderecoAtual;
+          }
+        }, (err) => {
+          enderecoAtual = "Balneário Camboriú - SC";
+          document.getElementById('inputLocalizacao').value = enderecoAtual;
+          document.getElementById('gpsStatus').innerText = "⚠️ GPS indisponível. Usando localização padrão.";
+        }, { enableHighAccuracy: true, timeout: 10000 });
       }
+    }
+
+    // Processamento da Imagem e Aplicação da Marca D'água
+    document.getElementById('fileCamera').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          canvas.width = img.width;
+          canvas.height = img.height;
+
+          // Desenha a foto original
+          ctx.drawImage(img, 0, 0);
+
+          // Aplicação de faixa de marca d'água no fundo da foto
+          const bannerHeight = canvas.height * 0.18;
+          ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+          ctx.fillRect(0, canvas.height - bannerHeight, canvas.width, bannerHeight);
+
+          // Texto da marca d'água
+          const fontSize = Math.max(16, Math.floor(canvas.height * 0.028));
+          ctx.font = `bold ${fontSize}px sans-serif`;
+          ctx.fillStyle = "#ffffff";
+
+          const emp = document.getElementById('inputEmpreendimento').value;
+          const pav = document.getElementById('selectPavimento').value;
+          const amb = document.getElementById('inputAmbiente').value;
+          const aud = document.getElementById('inputAuditor').value;
+          const dataHora = new Date().toLocaleString('pt-BR');
+
+          const padding = canvas.width * 0.03;
+          let currentY = canvas.height - bannerHeight + (fontSize * 1.2);
+
+          ctx.fillText(`${emp} | PAVIMENTO: ${pav}`, padding, currentY);
+          currentY += fontSize * 1.3;
+          ctx.fillText(`AMBIENTE: ${amb} | AUDITOR: ${aud}`, padding, currentY);
+          currentY += fontSize * 1.3;
+          ctx.fillText(`DATA: ${dataHora} | LOCAL: ${enderecoAtual}`, padding, currentY);
+
+          const fotoComWatermark = canvas.toDataURL('image/jpeg', 0.85);
+
+          fotosGuardadas.push({
+            src: fotoComWatermark,
+            pavimento: pav,
+            ambiente: amb,
+            dataHora: dataHora,
+            localizacao: enderecoAtual,
+            observacao: document.getElementById('inputObservacoes').value || "Sem observações registadas."
+          });
+
+          alert("✅ Foto adicionada ao relatório com sucesso!");
+          document.getElementById('inputObservacoes').value = ""; // Limpa a observação para a próxima foto
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Gerar a visualização do relatório
+    function gerarRelatorio() {
+      const emp = document.getElementById('inputEmpreendimento').value;
+      const aud = document.getElementById('inputAuditor').value;
+      const empDept = document.getElementById('inputEmpresa').value;
+      const dataHoraAtual = new Date().toLocaleString('pt-BR');
+
+      document.getElementById('displayEmpreendimento').innerText = `EMPREENDIMENTO: ${emp}`;
+      document.getElementById('displayHeaderMeta').innerText = `${dataHoraAtual} — ${enderecoAtual}`;
+      document.getElementById('displayAuditor').innerText = aud;
+      document.getElementById('displayEmpresa').innerText = empDept;
+
+      const container = document.getElementById('photosList');
+      container.innerHTML = "";
+
+      if (fotosGuardadas.length === 0) {
+        container.innerHTML = "<p style='color: #64748b;'>Nenhuma foto adicionada. Tire uma foto acima antes de gerar.</p>";
+      } else {
+        document.getElementById('displayTotalFotos').innerText = `Registos e Evidências Fotográficas (${fotosGuardadas.length})`;
+        
+        fotosGuardadas.forEach((foto, idx) => {
+          const card = document.createElement('div');
+          card.className = 'photo-card';
+          card.innerHTML = `
+            <div class="photo-card-header">
+              <span>#${idx + 1} - Pavimento: ${foto.pavimento}</span>
+              <span class="ambiente">Ambiente: ${foto.ambiente}</span>
+            </div>
+            <div class="photo-card-body">
+              <img src="${foto.src}" alt="Foto ${idx + 1}">
+              <div class="photo-info">
+                <p><strong>Data/Hora do Registo:</strong> ${foto.dataHora}</p>
+                <p><strong>Localização:</strong> ${foto.localizacao}</p>
+                <div class="obs-box">
+                  <strong>Observações / Apontamentos:</strong>
+                  <div class="obs-content">${foto.observacao}</div>
+                </div>
+              </div>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      }
+
+      document.getElementById('formContainer').style.display = 'none';
+      document.getElementById('reportPreview').style.display = 'block';
+    }
+
+    function voltarEdicao() {
+      document.getElementById('reportPreview').style.display = 'none';
+      document.getElementById('formContainer').style.display = 'block';
     }
   </script>
 </body>
