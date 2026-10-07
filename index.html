@@ -3,533 +3,508 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Vistoria Fotográfica - Sistema de Auditoria</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <title>Vistoria & Relatório Fotográfico - FG Empreendimentos</title>
+  
+  <!-- Tailwind CSS & Lucide Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
   <style>
     :root {
-      --primary: #135C6C;
-      --primary-dark: #0e4450;
-      --bg-gray: #f4f6f8;
-      --border-color: #cbd5e1;
+      --primary-fg: #135C6C;
     }
-
-    * {
-      box-sizing: border-box;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-
     body {
-      margin: 0;
-      padding: 0;
-      background-color: var(--bg-gray);
-      color: #333;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
-
-    .app-container {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 15px;
+    input, textarea, select {
+      -webkit-user-select: auto;
+      user-select: auto;
     }
-
-    .card {
-      background: #ffffff;
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      margin-bottom: 20px;
+    @media print {
+      .no-print { display: none !important; }
+      .print-only { display: block !important; }
     }
-
-    h2 {
-      color: var(--primary);
-      margin-top: 0;
-      font-size: 20px;
-      border-bottom: 2px solid var(--primary);
-      padding-bottom: 8px;
-    }
-
-    .form-group {
-      margin-bottom: 15px;
-    }
-
-    label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: #475569;
-      margin-bottom: 6px;
-    }
-
-    input[type="text"], select, textarea {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      font-size: 14px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    input[type="text"]:focus, select:focus, textarea:focus {
-      border-color: var(--primary);
-    }
-
-    textarea {
-      resize: vertical;
-      min-height: 110px;
-    }
-
-    .row {
-      display: flex;
-      gap: 12px;
-    }
-
-    .row > div {
-      flex: 1;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      background-color: var(--primary);
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      font-size: 15px;
-      font-weight: 600;
-      border-radius: 8px;
-      cursor: pointer;
-      width: 100%;
-      transition: background 0.2s;
-    }
-
-    .btn:hover {
-      background-color: var(--primary-dark);
-    }
-
-    .btn-secondary {
-      background-color: #64748b;
-    }
-
-    .btn-secondary:hover {
-      background-color: #475569;
-    }
-
-    .gps-status {
-      font-size: 12px;
-      color: #059669;
-      margin-top: 4px;
-      font-weight: 500;
-    }
-
-    /* Estilos da Folha do Relatório Final */
-    #reportPreview {
-      display: none;
-      background: #fff;
-      padding: 30px;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-    }
-
-    .header-container {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      border-bottom: 2px solid var(--primary);
-      padding-bottom: 12px;
-      margin-bottom: 20px;
-    }
-
-    .header-title {
-      font-size: 22px;
-      font-weight: bold;
-      color: #111;
-      text-transform: uppercase;
-      margin: 0 0 6px 0;
-    }
-
-    .header-subtitle {
-      font-size: 15px;
-      font-weight: bold;
-      color: var(--primary);
-      margin: 4px 0;
-      text-transform: uppercase;
-    }
-
-    .header-location {
-      font-size: 13px;
-      color: var(--primary);
-      font-weight: 600;
-      margin-top: 4px;
-    }
-
-    .logo-container img {
-      max-width: 130px;
-      height: auto;
-    }
-
-    .auditor-card {
-      background-color: #f8f9fa;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 12px 16px;
-      display: flex;
-      gap: 40px;
-      margin-bottom: 24px;
-    }
-
-    .auditor-card div p {
-      margin: 2px 0;
-    }
-
-    .auditor-card .label {
-      font-size: 12px;
-      color: #64748b;
-    }
-
-    .auditor-card .value {
-      font-weight: bold;
-      color: #1e293b;
-    }
-
-    .section-title {
-      font-size: 17px;
-      font-weight: bold;
-      color: var(--primary);
-      margin-bottom: 14px;
-      border-bottom: 1px solid #cbd5e1;
-      padding-bottom: 6px;
-    }
-
-    .photo-card {
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      overflow: hidden;
-      margin-bottom: 20px;
-    }
-
-    .photo-card-header {
-      background-color: #0f172a;
-      color: #fff;
-      padding: 8px 12px;
-      display: flex;
-      justify-content: space-between;
-      font-size: 14px;
-      font-weight: bold;
-    }
-
-    .photo-card-header .ambiente {
-      color: var(--primary);
-      background-color: #ffffff;
-      padding: 2px 8px;
-      border-radius: 4px;
-    }
-
-    .photo-card-body {
-      display: flex;
-      padding: 12px;
-      gap: 16px;
-    }
-
-    .photo-card-body img {
-      width: 300px;
-      height: 225px;
-      object-fit: cover;
-      border-radius: 6px;
-    }
-
-    .photo-info {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .obs-box {
-      background-color: #f8f9fa;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      padding: 12px;
-      flex: 1;
-    }
-
-    .obs-box strong {
-      display: block;
-      margin-bottom: 6px;
-      color: #334155;
-    }
-
-    .obs-content {
-      font-size: 14px;
-      color: #1e293b;
-      white-space: pre-wrap;
-    }
-
-    @media (max-width: 600px) {
-      .row { flex-direction: column; gap: 0; }
-      .photo-card-body { flex-direction: column; }
-      .photo-card-body img { width: 100%; height: auto; }
-      .header-container { flex-direction: column-reverse; gap: 10px; }
-    }
+    .bg-fg { background-color: #135C6C; }
+    .text-fg { color: #135C6C; }
+    .border-fg { border-color: #135C6C; }
   </style>
 </head>
-<body>
+<body class="bg-gray-100 text-gray-800 font-sans pb-24">
 
-  <div class="app-container">
-    
-    <!-- Formulário de Entrada -->
-    <div id="formContainer" class="card">
-      <h2>Nova Vistoria Fotográfica</h2>
-
-      <div class="form-group">
-        <label>Empreendimento:</label>
-        <input type="text" id="inputEmpreendimento" value="SAPPHIRE TOWER – FG & SORDI MOVELARIA">
+  <!-- Header Fixo -->
+  <header class="sticky top-0 z-50 bg-[#135C6C] text-white shadow-md p-4 flex items-center justify-between no-print">
+    <div class="flex items-center gap-3">
+      <img src="logo-fg.png" alt="FG Logo" class="h-8 bg-white/10 p-1 rounded" onerror="this.style.display='none'">
+      <div>
+        <h1 class="text-base font-bold leading-tight">Relatório & Vistoria Fotográfica</h1>
+        <p class="text-xs text-amber-300 font-medium" id="headerBuildingName">SAPPHIRE TOWER – FG & SORDI</p>
       </div>
+    </div>
+    <span class="bg-white/20 text-white text-xs px-2.5 py-1 rounded-full font-semibold flex items-center gap-1">
+      <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Qualidade
+    </span>
+  </header>
 
-      <div class="row">
-        <div class="form-group">
-          <label>Vistoriador / Auditor:</label>
-          <input type="text" id="inputAuditor" value="Auditor Técnico">
+  <main class="max-w-xl mx-auto p-4 space-y-6">
+
+    <!-- Card 1: Identificação da Vistoria -->
+    <section class="bg-white rounded-xl shadow-sm p-4 border border-gray-200 no-print">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+        <i data-lucide="building" class="w-4 h-4 text-[#135C6C]"></i> Dados do Empreendimento e Vistoria
+      </h2>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Empreendimento</label>
+          <input type="text" id="buildingName" value="SAPPHIRE TOWER – FG & SORDI MOVELARIA" onchange="document.getElementById('headerBuildingName').innerText=this.value"
+                 class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#135C6C] focus:outline-none">
         </div>
-        <div class="form-group">
-          <label>Empresa / Departamento:</label>
-          <input type="text" id="inputEmpresa" value="Auditoria Interna / Qualidade">
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Responsável / Auditor</label>
+            <input type="text" id="inspectorName" value="Auditor Técnico" 
+                   class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#135C6C] focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Empresa / Setor</label>
+            <input type="text" id="inspectorSector" value="Auditoria Interna / Qualidade" 
+                   class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#135C6C] focus:outline-none">
+          </div>
         </div>
       </div>
+    </section>
 
-      <div class="row">
-        <div class="form-group">
-          <label>Pavimento:</label>
-          <select id="selectPavimento">
-            <option value="01 TÉRREO">01 TÉRREO</option>
-            <option value="02 GARAGEM G1">02 GARAGEM G1</option>
-            <option value="03 GARAGEM G2">03 GARAGEM G2</option>
-            <option value="04 GARAGEM G3">04 GARAGEM G3</option>
-            <option value="05 LAZER ROOFTOP">05 LAZER ROOFTOP</option>
-            <option value="06 APARTAMENTO TIPO">06 APARTAMENTO TIPO</option>
-            <option value="55 ROOFTOP">55 ROOFTOP</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Ambiente / Cômodo:</label>
-          <input type="text" id="inputAmbiente" value="Geral" placeholder="Ex: Cozinha, Suíte Master">
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Localização Atual (Obtida pelo GPS):</label>
-        <input type="text" id="inputLocalizacao" readonly placeholder="A obter localização GPS...">
-        <div class="gps-status" id="gpsStatus">📍 A obter endereço aproximado pelo GPS...</div>
-      </div>
-
-      <div class="form-group">
-        <label>Adicionar Foto com Marca D'água:</label>
-        <input type="file" id="fileCamera" accept="image/*" capture="environment" style="display:none;">
-        <button type="button" class="btn" onclick="document.getElementById('fileCamera').click()">
-          📷 Tirar Foto / Selecionar da Galeria
+    <!-- Card 2: Geolocalização -->
+    <section class="bg-white rounded-xl shadow-sm p-4 border border-gray-200 no-print">
+      <div class="flex justify-between items-center mb-2">
+        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+          <i data-lucide="map-pin" class="w-4 h-4 text-red-500"></i> Localização & GPS do Navegador
+        </h2>
+        <button onclick="getLocation()" class="text-xs text-[#135C6C] font-semibold hover:underline flex items-center gap-1">
+          <i data-lucide="refresh-cw" class="w-3 h-3"></i> Atualizar GPS
         </button>
       </div>
-
-      <div class="form-group">
-        <label>Observações / Apontamentos:</label>
-        <textarea id="inputObservacoes" placeholder="Digite aqui os apontamentos, não conformidades ou observações técnicas..."></textarea>
+      
+      <div id="locationStatus" class="p-3 bg-slate-50 rounded-lg text-xs space-y-1 text-gray-600 border border-slate-200">
+        <p id="geoAddress"><strong>Endereço Obra:</strong> Buscando localização do dispositivo...</p>
+        <p id="geoCoordinates"><strong>GPS:</strong> Capturando coordenadas...</p>
       </div>
+    </section>
 
-      <div class="form-group" style="margin-top: 20px;">
-        <button type="button" class="btn" onclick="gerarRelatorio()">📄 Gerar e Visualizar Relatório</button>
-      </div>
-    </div>
-
-    <!-- Visualização do Relatório Final -->
-    <div id="reportPreview">
-      <div class="header-container">
+    <!-- Card 3: Seleção de Pavimento -->
+    <section class="bg-white rounded-xl shadow-sm p-4 border border-gray-200 no-print">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+        <i data-lucide="layers" class="w-4 h-4 text-[#135C6C]"></i> Pavimento / Ambiente
+      </h2>
+      
+      <div class="space-y-3">
         <div>
-          <h1 class="header-title">Relatório Fotográfico de Vistoria</h1>
-          <div class="header-subtitle" id="displayEmpreendimento"></div>
-          <div class="header-location" id="displayHeaderMeta"></div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Selecione o Pavimento</label>
+          <select id="floorSelect" onchange="updateFloorInfo()" class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#135C6C] focus:outline-none font-medium">
+          </select>
         </div>
-        <div class="logo-container">
-          <img src="logo-fg.png" alt="FG Empreendimentos" onerror="this.src='logo-fg.png.png'">
-        </div>
-      </div>
 
-      <div class="auditor-card">
+        <div id="floorDetailCard" class="p-3 bg-cyan-50 border border-cyan-200 rounded-lg text-xs text-cyan-950 space-y-1">
+          <p id="floorDetailType"><strong>Tipologia:</strong> -</p>
+          <p id="floorDetailDates"><strong>Previsão de Montagem:</strong> -</p>
+        </div>
+
         <div>
-          <p class="label">Vistoriador / Auditor:</p>
-          <p class="value" id="displayAuditor"></p>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Ambiente / Cômodo Vistoriado</label>
+          <input type="text" id="environmentInput" placeholder="Ex: Geral, Shaft Principal, Cozinha, Sacada" 
+                 class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#135C6C] focus:outline-none">
         </div>
+      </div>
+    </section>
+
+    <!-- Card 4: Captura de Foto -->
+    <section class="bg-white rounded-xl shadow-sm p-4 border border-gray-200 no-print">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+        <i data-lucide="camera" class="w-4 h-4 text-[#135C6C]"></i> Capturar / Carregar Fotografia
+      </h2>
+
+      <div class="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl p-6 bg-gray-50 hover:bg-gray-100 transition cursor-pointer relative">
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" onchange="processImage(event)" 
+               class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+        <i data-lucide="aperture" class="w-10 h-10 text-gray-400 mb-2"></i>
+        <p class="text-xs font-semibold text-gray-700">Tirar Foto ou Selecionar da Galeria</p>
+        <p class="text-[10px] text-gray-500">A marca d'água com endereço, GPS e andar será aplicada automaticamente</p>
+      </div>
+
+      <!-- Preview com Edição de Observação -->
+      <div id="previewContainer" class="mt-4 hidden space-y-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+        <p class="text-xs font-bold text-slate-700 flex items-center gap-1">
+          <i data-lucide="eye" class="w-3.5 h-3.5 text-[#135C6C]"></i> Preview da Imagem com Marca D'água:
+        </p>
+        
+        <div class="relative rounded-lg overflow-hidden border border-gray-300 shadow-inner max-h-[320px] bg-black flex items-center justify-center">
+          <canvas id="photoCanvas" class="max-w-full max-h-[300px] w-auto h-auto block object-contain"></canvas>
+        </div>
+
         <div>
-          <p class="label">Empresa / Departamento:</p>
-          <p class="value" id="displayEmpresa"></p>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Observação / Apontamento para esta Foto:</label>
+          <textarea id="photoNotes" rows="3" placeholder="Descreva inconformidades, apontamentos ou o status vistoriado..." 
+                    class="w-full p-2.5 bg-white border border-gray-300 rounded-lg text-xs focus:ring-2 focus:ring-[#135C6C] focus:outline-none"></textarea>
         </div>
+
+        <button onclick="addPhotoToInspection()" class="w-full py-3 bg-[#135C6C] text-white font-bold rounded-lg text-xs hover:bg-[#0e4450] flex items-center justify-center gap-2 shadow">
+          <i data-lucide="plus-circle" class="w-4 h-4"></i> Adicionar Foto ao Relatório
+        </button>
       </div>
+    </section>
 
-      <div class="section-title" id="displayTotalFotos">Registos e Evidências Fotográficas (0)</div>
-
-      <div id="photosList"></div>
-
-      <div style="margin-top: 25px; display: flex; gap: 10px;">
-        <button class="btn btn-secondary" onclick="voltarEdicao()">✏️ Voltar / Editar</button>
-        <button class="btn" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+    <!-- Galeria de Fotos Adicionadas -->
+    <section class="bg-white rounded-xl shadow-sm p-4 border border-gray-200 no-print">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center justify-between">
+        <span class="flex items-center gap-2"><i data-lucide="image" class="w-4 h-4 text-slate-700"></i> Registos Fotografados</span>
+        <span id="photoCount" class="text-xs bg-[#135C6C] text-white px-2.5 py-0.5 rounded-full font-bold">0</span>
+      </h2>
+      <div id="gallery" class="grid grid-cols-2 gap-2">
+        <p id="emptyGallery" class="col-span-2 text-xs text-gray-400 text-center py-4">Nenhuma foto adicionada ao relatório ainda.</p>
       </div>
-    </div>
+    </section>
 
-  </div>
+  </main>
+
+  <!-- Barra de Ações Inferior -->
+  <footer class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 flex justify-around items-center z-50 no-print">
+    <button onclick="window.scrollTo({top:0, behavior:'smooth'})" class="flex flex-col items-center text-xs text-gray-600">
+      <i data-lucide="arrow-up" class="w-5 h-5"></i> Topo
+    </button>
+    <button onclick="generatePDFReport()" class="px-6 py-3 bg-[#135C6C] text-white rounded-xl font-bold text-xs shadow-lg hover:bg-[#0e4450] flex items-center gap-2">
+      <i data-lucide="file-text" class="w-4 h-4 text-amber-300"></i> Visualizar / Imprimir PDF
+    </button>
+  </footer>
 
   <script>
-    let fotosGuardadas = [];
-    let enderecoAtual = "Balneário Camboriú - SC";
-    let latAtual = null;
-    let lonAtual = null;
+    lucide.createIcons();
 
-    // Obter localização do dispositivo e converter via Geocoding
-    window.addEventListener('load', () => {
-      obterLocalizacao();
-    });
+    let currentLat = "-26.9926";
+    let currentLng = "-48.6351";
+    let currentAddressStr = "Rua 1500, Balneário Camboriú - SC";
+    let capturedPhotos = [];
 
-    function obterLocalizacao() {
-      if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(async (pos) => {
-          latAtual = pos.coords.latitude;
-          lonAtual = pos.coords.longitude;
-          document.getElementById('gpsStatus').innerText = `📍 GPS: ${latAtual.toFixed(5)}, ${lonAtual.toFixed(5)} (Convertendo endereço...)`;
-          
-          try {
-            const resp = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latAtual}&lon=${lonAtual}`);
-            const data = await resp.json();
-            const rua = data.address.road || data.address.pedestrian || "Rua Local";
-            const cidade = data.address.city || data.address.town || data.address.municipality || "Balneário Camboriú";
-            const uf = data.address.state_code || "SC";
-            enderecoAtual = `${rua}, ${cidade} - ${uf}`;
-            document.getElementById('inputLocalizacao').value = enderecoAtual;
-            document.getElementById('gpsStatus').innerText = `📍 Endereço: ${enderecoAtual}`;
-          } catch (e) {
-            enderecoAtual = `Balneário Camboriú - SC (${latAtual.toFixed(4)}, ${lonAtual.toFixed(4)})`;
-            document.getElementById('inputLocalizacao').value = enderecoAtual;
-          }
-        }, (err) => {
-          enderecoAtual = "Balneário Camboriú - SC";
-          document.getElementById('inputLocalizacao').value = enderecoAtual;
-          document.getElementById('gpsStatus').innerText = "⚠️ GPS indisponível. Usando localização padrão.";
-        }, { enableHighAccuracy: true, timeout: 10000 });
+    const floorsSchedule = [
+      { id: "01", name: "01 TÉRREO", type: "Área Comum / Acesso", dates: "Conforme Cronograma Áreas Comuns" },
+      { id: "02", name: "02 G1", type: "Garagens", dates: "18/11/26 a 19/11/26" },
+      { id: "03", name: "03 G2", type: "Garagens", dates: "18/11/26 a 19/11/26" },
+      { id: "04", name: "04 G3", type: "Garagens", dates: "16/11/26 a 17/11/26" },
+      { id: "05", name: "05 G4", type: "Garagens", dates: "16/11/26 a 17/11/26" },
+      { id: "06", name: "06 G5", type: "Garagens", dates: "16/11/26 a 17/11/26" },
+      { id: "07", name: "07 LAZER 1", type: "Lazer Áreas Comuns", dates: "Conforme Cronograma Áreas Comuns" },
+      { id: "08", name: "08 LAZER 2", type: "Lazer Áreas Comuns", dates: "Conforme Cronograma Áreas Comuns" },
+      { id: "09", name: "09 DIF. 1", type: "Diferenciado 1", dates: "16/11/26 a 18/11/26" },
+      { id: "10", name: "10 DIF. 2", type: "Diferenciado 2", dates: "11/11/26 a 13/11/26" },
+      { id: "11", name: "11 TIPO A", type: "Tipo A", dates: "Executado por Modelare" },
+      { id: "12", name: "12 TIPO A", type: "Tipo A", dates: "19/08/26 a 21/08/26" },
+      { id: "13", name: "13 TIPO A", type: "Tipo A", dates: "14/09/26 a 22/09/26" },
+      { id: "14", name: "14 TIPO A", type: "Tipo A", dates: "14/09/26 a 22/09/26" },
+      { id: "15", name: "15 TIPO A", type: "Tipo A", dates: "22/09/26 a 23/09/26" },
+      { id: "16", name: "16 TIPO A", type: "Tipo A", dates: "22/09/26 a 23/09/26" },
+      { id: "17", name: "17 TIPO A", type: "Tipo A", dates: "23/09/26 a 25/09/26" },
+      { id: "18", name: "18 TIPO A", type: "Tipo A", dates: "23/09/26 a 25/09/26" },
+      { id: "19", name: "19 TIPO A", type: "Tipo A", dates: "24/09/26 a 25/09/26" },
+      { id: "20", name: "20 TIPO B", type: "Tipo B", dates: "25/09/26 a 28/09/26" },
+      { id: "21", name: "21 TIPO B", type: "Tipo B", dates: "25/09/26 a 28/09/26" },
+      { id: "22", name: "22 TIPO B", type: "Tipo B", dates: "25/09/26 a 28/09/26" },
+      { id: "23", name: "23 TIPO B", type: "Tipo B", dates: "29/09/26 a 30/09/26" },
+      { id: "24", name: "24 TIPO B", type: "Tipo B", dates: "29/09/26 a 30/09/26" },
+      { id: "25", name: "25 TIPO B", type: "Tipo B", dates: "29/09/26 a 30/09/26" },
+      { id: "26", name: "26 TIPO B", type: "Tipo B", dates: "30/09/26 a 02/10/26" },
+      { id: "27", name: "27 TIPO B", type: "Tipo B", dates: "30/09/26 a 02/10/26" },
+      { id: "28", name: "28 TIPO B", type: "Tipo B", dates: "30/09/26 a 02/10/26" },
+      { id: "29", name: "29 TIPO B", type: "Tipo B", dates: "07/10/26 a 09/10/26" },
+      { id: "30", name: "30 TIPO C", type: "Tipo C", dates: "07/10/26 a 09/10/26" },
+      { id: "31", name: "31 TIPO C", type: "Tipo C", dates: "07/10/26 a 09/10/26" },
+      { id: "32", name: "32 TIPO C", type: "Tipo C", dates: "13/10/26 a 15/10/26" },
+      { id: "33", name: "33 TIPO C", type: "Tipo C", dates: "13/10/26 a 15/10/26" },
+      { id: "34", name: "34 TIPO C", type: "Tipo C", dates: "16/10/26 a 20/10/26" },
+      { id: "35", name: "35 TIPO C", type: "Tipo C", dates: "16/10/26 a 20/10/26" },
+      { id: "36", name: "36 TIPO C", type: "Tipo C", dates: "21/10/26 a 23/10/26" },
+      { id: "37", name: "37 TIPO C", type: "Tipo C", dates: "21/10/26 a 23/10/26" },
+      { id: "38", name: "38 TIPO C", type: "Tipo C", dates: "26/10/26 a 28/10/26" },
+      { id: "39", name: "39 TIPO C", type: "Tipo C", dates: "26/10/26 a 28/10/26" },
+      { id: "40", name: "40 TIPO C", type: "Tipo C", dates: "26/10/26 a 28/10/26" },
+      { id: "41", name: "41 TIPO C", type: "Tipo C", dates: "28/10/26 a 30/10/26" },
+      { id: "42", name: "42 TIPO C", type: "Tipo C", dates: "28/10/26 a 30/10/26" },
+      { id: "43", name: "43 TIPO C", type: "Tipo C", dates: "28/10/26 a 30/10/26" },
+      { id: "44", name: "44 TIPO C", type: "Tipo C", dates: "03/11/26 a 05/11/26" },
+      { id: "45", name: "45 TIPO C", type: "Tipo C", dates: "03/11/26 a 05/11/26" },
+      { id: "46", name: "46 TIPO C", type: "Tipo C", dates: "03/11/26 a 05/11/26" },
+      { id: "47", name: "47 TIPO C", type: "Tipo C", dates: "03/11/26 a 05/11/26" },
+      { id: "48", name: "48 TIPO C", type: "Tipo C", dates: "06/11/26 a 10/11/26" },
+      { id: "49", name: "49 TIPO C", type: "Tipo C", dates: "06/11/26 a 10/11/26" },
+      { id: "50", name: "50 MASTER", type: "Master", dates: "06/11/26 a 10/11/26" },
+      { id: "51", name: "51 MASTER", type: "Master", dates: "06/11/26 a 10/11/26" },
+      { id: "52", name: "52 MASTER", type: "Master", dates: "11/11/26 a 13/11/26" },
+      { id: "53", name: "53 MASTER", type: "Master", dates: "11/11/26 a 13/11/26" },
+      { id: "54", name: "54 DUPLEX INF. + TIPO", type: "Duplex Inf. + Tipo", dates: "11/11/26 a 13/11/26" },
+      { id: "55", name: "55 DUPLEX SUP. ROOFTOP", type: "Duplex Sup. Rooftop", dates: "Conforme Cronograma Rooftop" }
+    ];
+
+    function populateFloors() {
+      const select = document.getElementById('floorSelect');
+      select.innerHTML = floorsSchedule.map(item => `<option value="${item.name}">${item.name}</option>`).join('');
+      updateFloorInfo();
+    }
+
+    function updateFloorInfo() {
+      const selectedName = document.getElementById('floorSelect').value;
+      const floor = floorsSchedule.find(f => f.name === selectedName);
+      if (floor) {
+        document.getElementById('floorDetailType').innerHTML = `<strong>Tipologia:</strong> ${floor.type}`;
+        document.getElementById('floorDetailDates').innerHTML = `<strong>Previsão de Montagem:</strong> ${floor.dates}`;
       }
     }
 
-    // Processamento da Imagem e Aplicação da Marca D'água
-    document.getElementById('fileCamera').addEventListener('change', function(e) {
-      const file = e.target.files[0];
+    function getLocation() {
+      if ("geolocation" in navigator) {
+        document.getElementById('geoCoordinates').innerHTML = `<strong>GPS:</strong> Capturando...`;
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+          currentLat = pos.coords.latitude.toFixed(6);
+          currentLng = pos.coords.longitude.toFixed(6);
+          document.getElementById('geoCoordinates').innerHTML = `<strong>GPS:</strong> ${currentLat}, ${currentLng}`;
+
+          try {
+            const resp = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${currentLat}&lon=${currentLng}`);
+            const data = await resp.json();
+            const rua = data.address.road || data.address.pedestrian || "Rua 1500";
+            const cidade = data.address.city || data.address.town || "Balneário Camboriú";
+            const uf = data.address.state_code || "SC";
+            currentAddressStr = `${rua}, ${cidade} - ${uf}`;
+            document.getElementById('geoAddress').innerHTML = `<strong>Endereço:</strong> ${currentAddressStr}`;
+          } catch (e) {
+            currentAddressStr = `Balneário Camboriú - SC`;
+            document.getElementById('geoAddress').innerHTML = `<strong>Endereço:</strong> ${currentAddressStr}`;
+          }
+        }, () => {
+          document.getElementById('geoCoordinates').innerHTML = `<strong>GPS:</strong> ${currentLat}, ${currentLng} (Aproximado)`;
+          document.getElementById('geoAddress').innerHTML = `<strong>Endereço:</strong> ${currentAddressStr}`;
+        }, { enableHighAccuracy: true, timeout: 8000 });
+      }
+    }
+
+    window.onload = () => {
+      populateFloors();
+      getLocation();
+    };
+
+    function processImage(event) {
+      const file = event.target.files[0];
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = function(event) {
+      reader.onload = function(e) {
         const img = new Image();
         img.onload = function() {
-          const canvas = document.createElement('canvas');
+          const canvas = document.getElementById('photoCanvas');
           const ctx = canvas.getContext('2d');
-          
+
           canvas.width = img.width;
           canvas.height = img.height;
-
-          // Desenha a foto original
           ctx.drawImage(img, 0, 0);
 
-          // Aplicação de faixa de marca d'água no fundo da foto
-          const bannerHeight = canvas.height * 0.18;
-          ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
-          ctx.fillRect(0, canvas.height - bannerHeight, canvas.width, bannerHeight);
+          const building = document.getElementById('buildingName').value || 'SAPPHIRE TOWER';
+          const inspector = document.getElementById('inspectorName').value || 'AUDITOR TÉCNICO';
+          const floor = document.getElementById('floorSelect').value;
+          const env = document.getElementById('environmentInput').value || 'GERAL';
+          const now = new Date();
+          const dateStr = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR');
 
-          // Texto da marca d'água
-          const fontSize = Math.max(16, Math.floor(canvas.height * 0.028));
+          const fontSize = Math.max(16, Math.floor(canvas.width / 34));
+          const padding = fontSize * 0.8;
+          const lineHeight = fontSize * 1.35;
+
+          const lines = [
+            `${building.toUpperCase()} | PAV: ${floor}`,
+            `AMBIENTE: ${env.toUpperCase()} | AUDITOR: ${inspector.toUpperCase()}`,
+            `DATA: ${dateStr} | END: ${currentAddressStr}`,
+            `GPS: ${currentLat}, ${currentLng}`
+          ];
+
+          const boxHeight = (lines.length * lineHeight) + (padding * 1.8);
+
+          // Faixa de fundo da marca d'água
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+          ctx.fillRect(0, canvas.height - boxHeight, canvas.width, boxHeight);
+
+          // Linha decorativa verde/azul
+          ctx.fillStyle = '#135C6C';
+          ctx.fillRect(0, canvas.height - boxHeight, canvas.width, 6);
+
+          ctx.fillStyle = '#ffffff';
           ctx.font = `bold ${fontSize}px sans-serif`;
-          ctx.fillStyle = "#ffffff";
 
-          const emp = document.getElementById('inputEmpreendimento').value;
-          const pav = document.getElementById('selectPavimento').value;
-          const amb = document.getElementById('inputAmbiente').value;
-          const aud = document.getElementById('inputAuditor').value;
-          const dataHora = new Date().toLocaleString('pt-BR');
-
-          const padding = canvas.width * 0.03;
-          let currentY = canvas.height - bannerHeight + (fontSize * 1.2);
-
-          ctx.fillText(`${emp} | PAVIMENTO: ${pav}`, padding, currentY);
-          currentY += fontSize * 1.3;
-          ctx.fillText(`AMBIENTE: ${amb} | AUDITOR: ${aud}`, padding, currentY);
-          currentY += fontSize * 1.3;
-          ctx.fillText(`DATA: ${dataHora} | LOCAL: ${enderecoAtual}`, padding, currentY);
-
-          const fotoComWatermark = canvas.toDataURL('image/jpeg', 0.85);
-
-          fotosGuardadas.push({
-            src: fotoComWatermark,
-            pavimento: pav,
-            ambiente: amb,
-            dataHora: dataHora,
-            localizacao: enderecoAtual,
-            observacao: document.getElementById('inputObservacoes').value || "Sem observações registadas."
+          lines.forEach((line, index) => {
+            ctx.fillText(line, padding, canvas.height - boxHeight + padding + (index * lineHeight) + (fontSize * 0.75));
           });
 
-          alert("✅ Foto adicionada ao relatório com sucesso!");
-          document.getElementById('inputObservacoes').value = ""; // Limpa a observação para a próxima foto
+          document.getElementById('previewContainer').classList.remove('hidden');
         };
-        img.src = event.target.result;
+        img.src = e.target.result;
       };
       reader.readAsDataURL(file);
-    });
-
-    // Gerar a visualização do relatório
-    function gerarRelatorio() {
-      const emp = document.getElementById('inputEmpreendimento').value;
-      const aud = document.getElementById('inputAuditor').value;
-      const empDept = document.getElementById('inputEmpresa').value;
-      const dataHoraAtual = new Date().toLocaleString('pt-BR');
-
-      document.getElementById('displayEmpreendimento').innerText = `EMPREENDIMENTO: ${emp}`;
-      document.getElementById('displayHeaderMeta').innerText = `${dataHoraAtual} — ${enderecoAtual}`;
-      document.getElementById('displayAuditor').innerText = aud;
-      document.getElementById('displayEmpresa').innerText = empDept;
-
-      const container = document.getElementById('photosList');
-      container.innerHTML = "";
-
-      if (fotosGuardadas.length === 0) {
-        container.innerHTML = "<p style='color: #64748b;'>Nenhuma foto adicionada. Tire uma foto acima antes de gerar.</p>";
-      } else {
-        document.getElementById('displayTotalFotos').innerText = `Registos e Evidências Fotográficas (${fotosGuardadas.length})`;
-        
-        fotosGuardadas.forEach((foto, idx) => {
-          const card = document.createElement('div');
-          card.className = 'photo-card';
-          card.innerHTML = `
-            <div class="photo-card-header">
-              <span>#${idx + 1} - Pavimento: ${foto.pavimento}</span>
-              <span class="ambiente">Ambiente: ${foto.ambiente}</span>
-            </div>
-            <div class="photo-card-body">
-              <img src="${foto.src}" alt="Foto ${idx + 1}">
-              <div class="photo-info">
-                <p><strong>Data/Hora do Registo:</strong> ${foto.dataHora}</p>
-                <p><strong>Localização:</strong> ${foto.localizacao}</p>
-                <div class="obs-box">
-                  <strong>Observações / Apontamentos:</strong>
-                  <div class="obs-content">${foto.observacao}</div>
-                </div>
-              </div>
-            </div>
-          `;
-          container.appendChild(card);
-        });
-      }
-
-      document.getElementById('formContainer').style.display = 'none';
-      document.getElementById('reportPreview').style.display = 'block';
     }
 
-    function voltarEdicao() {
-      document.getElementById('reportPreview').style.display = 'none';
-      document.getElementById('formContainer').style.display = 'block';
+    function addPhotoToInspection() {
+      const canvas = document.getElementById('photoCanvas');
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      const floor = document.getElementById('floorSelect').value;
+      const env = document.getElementById('environmentInput').value || 'Geral';
+      const notes = document.getElementById('photoNotes').value || 'Sem inconformidades anotadas.';
+
+      capturedPhotos.push({
+        floor: floor,
+        env: env,
+        notes: notes,
+        img: dataUrl,
+        location: currentAddressStr,
+        timestamp: new Date().toLocaleString('pt-BR')
+      });
+
+      renderGallery();
+      document.getElementById('previewContainer').classList.add('hidden');
+      document.getElementById('cameraInput').value = '';
+      document.getElementById('photoNotes').value = '';
+      alert('✅ Foto e observação vinculadas ao relatório com sucesso!');
+    }
+
+    function renderGallery() {
+      const gallery = document.getElementById('gallery');
+      document.getElementById('photoCount').innerText = capturedPhotos.length;
+
+      if (capturedPhotos.length === 0) {
+        gallery.innerHTML = `<p id="emptyGallery" class="col-span-2 text-xs text-gray-400 text-center py-4">Nenhuma foto adicionada ao relatório ainda.</p>`;
+        return;
+      }
+
+      gallery.innerHTML = capturedPhotos.map((item, idx) => `
+        <div class="relative rounded-lg overflow-hidden border border-gray-200 bg-gray-50 shadow-sm flex flex-col">
+          <img src="${item.img}" class="w-full h-28 object-cover">
+          <div class="p-2 text-[10px] space-y-1">
+            <p class="font-bold text-slate-800">${item.floor}</p>
+            <p class="text-[#135C6C] font-semibold truncate">Ambiente: ${item.env}</p>
+            <p class="text-gray-500 line-clamp-2">${item.notes}</p>
+          </div>
+          <button onclick="removePhoto(${idx})" class="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 shadow hover:bg-red-700">
+            <i data-lucide="x" class="w-3 h-3"></i>
+          </button>
+        </div>
+      `).join('');
+
+      lucide.createIcons();
+    }
+
+    function removePhoto(index) {
+      capturedPhotos.splice(index, 1);
+      renderGallery();
+    }
+
+    function generatePDFReport() {
+      if (capturedPhotos.length === 0) {
+        alert("Adicione pelo menos 1 foto ao relatório para gerar o documento.");
+        return;
+      }
+
+      const building = document.getElementById('buildingName').value || 'SAPPHIRE TOWER';
+      const inspector = document.getElementById('inspectorName').value || 'Auditor Técnico';
+      const sector = document.getElementById('inspectorSector').value || 'Auditoria Interna / Qualidade';
+      const dateStr = new Date().toLocaleString('pt-BR');
+
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+          <meta charset="UTF-8">
+          <title>Relatório Fotográfico de Vistoria - ${building}</title>
+          <script src="https://cdn.tailwindcss.com"><\/script>
+          <style>
+            @page { size: A4; margin: 10mm; }
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: white; color: #1e293b; }
+            .report-card-img { max-height: 230px; object-fit: contain; background: #000; }
+          </style>
+        </head>
+        <body class="p-4">
+          
+          <!-- Cabeçalho Institucional FG -->
+          <div class="border-b-2 border-[#135C6C] pb-3 mb-4 flex justify-between items-start">
+            <div>
+              <h1 class="text-xl font-black text-slate-900 uppercase">RELATÓRIO FOTOGRÁFICO DE VISTORIA</h1>
+              <p class="text-xs font-bold text-[#135C6C]">EMPREENDIMENTO: ${building}</p>
+              <p class="text-[11px] text-gray-500 mt-0.5">${dateStr} — ${currentAddressStr}</p>
+            </div>
+            <div class="text-right flex flex-col items-end">
+              <img src="logo-fg.png" alt="FG Logo" class="h-10 mb-1" onerror="this.src='logo-fg.png.png'">
+            </div>
+          </div>
+
+          <!-- Informações do Auditor -->
+          <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 mb-5 grid grid-cols-2 gap-4 text-xs">
+            <div>
+              <p class="text-gray-500">Vistoriador / Auditor:</p>
+              <p class="font-bold text-slate-800 text-sm">${inspector}</p>
+            </div>
+            <div>
+              <p class="text-gray-500">Empresa / Departamento:</p>
+              <p class="font-bold text-slate-800 text-sm">${sector}</p>
+            </div>
+          </div>
+
+          <!-- Lista de Fotos no Relatório -->
+          <div class="space-y-4">
+            <h2 class="text-sm font-bold border-b border-gray-300 pb-1 text-[#135C6C]">
+              Registros e Evidências Fotográficas (${capturedPhotos.length})
+            </h2>
+            
+            <div class="grid grid-cols-1 gap-4">
+              ${capturedPhotos.map((photo, index) => `
+                <div class="border border-slate-300 rounded-lg overflow-hidden break-inside-avoid bg-white">
+                  <div class="bg-[#135C6C] text-white px-3 py-1.5 flex justify-between items-center text-xs">
+                    <span class="font-bold">#${index + 1} - Pavimento:${photo.floor}</span>
+                    <span class="bg-white text-[#135C6C] px-2 py-0.5 rounded font-semibold text-[11px]">Ambiente: ${photo.env}</span>
+                  </div>
+                  <div class="p-3 grid grid-cols-12 gap-3 items-center">
+                    <div class="col-span-6 flex justify-center bg-gray-900 rounded overflow-hidden">
+                      <img src="${photo.img}" class="report-card-img w-full rounded">
+                    </div>
+                    <div class="col-span-6 text-xs space-y-1.5">
+                      <p class="text-gray-600"><strong>Data/Hora do Registo:</strong> ${photo.timestamp}</p>
+                      <p class="text-gray-600"><strong>Localização:</strong> ${photo.location}</p>
+                      <div class="p-2.5 bg-gray-50 border border-gray-200 rounded text-gray-700 min-h-[90px]">
+                        <strong class="text-slate-800 block mb-1">Observações / Apontamentos:</strong>
+                        <span class="whitespace-pre-wrap">${photo.notes}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Assinaturas -->
+          <div class="mt-8 pt-6 border-t border-gray-300 grid grid-cols-2 gap-8 text-center text-xs">
+            <div>
+              <div class="border-b border-gray-400 pb-6"></div>
+              <p class="mt-1.5 font-bold">${inspector}</p>
+              <p class="text-gray-500">${sector}</p>
+            </div>
+            <div>
+              <div class="border-b border-gray-400 pb-6"></div>
+              <p class="mt-1.5 font-bold">Engenharia / Responsável pela Obra</p>
+              <p class="text-gray-500">Recebido / Ciente</p>
+            </div>
+          </div>
+
+          <script>
+            window.onload = function() { window.print(); }
+          <\/script>
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
     }
   </script>
 </body>
