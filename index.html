@@ -45,11 +45,11 @@
       <img src="logo-fg.png" alt="FG Logo" class="h-8 bg-white/10 p-1 rounded" onerror="this.style.display='none'">
       <div>
         <h1 class="text-base font-bold leading-tight">Relatório & Vistoria Fotográfica</h1>
-        <p class="text-xs text-amber-300 font-medium" id="headerBuildingName">SAPPHIRE TOWER – FG & SORDI</p>
+        <p class="text-xs text-amber-300 font-medium" id="headerBuildingName"></p>
       </div>
     </div>
     <span class="bg-white/20 text-white text-xs px-2.5 py-1 rounded-full font-semibold flex items-center gap-1">
-      <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Qualidade
+      <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Vistoria
     </span>
   </header>
 
@@ -63,7 +63,7 @@
       <div class="space-y-3">
         <div>
           <label class="block text-xs font-medium text-gray-600 mb-1">Empreendimento</label>
-          <input type="text" id="buildingName" value="SAPPHIRE TOWER – FG & SORDI MOVELARIA" onchange="document.getElementById('headerBuildingName').innerText=this.value"
+          <input type="text" id="buildingName" value="" placeholder="Digite o nome do empreendimento" onchange="document.getElementById('headerBuildingName').innerText=this.value"
                  class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#135C6C] focus:outline-none">
         </div>
         <div class="grid grid-cols-2 gap-2">
@@ -98,7 +98,7 @@
       </div>
     </section>
 
-    <!-- Card 3: Seleção de Pavimento -->
+    <!-- Card 3: Seleção de Pavimento e Ambiente -->
     <section class="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
       <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
         <i data-lucide="layers" class="w-4 h-4 text-[#135C6C]"></i> Pavimento / Ambiente
@@ -118,8 +118,23 @@
 
         <div>
           <label class="block text-xs font-medium text-gray-600 mb-1">Ambiente / Cômodo Vistoriado</label>
-          <input type="text" id="environmentInput" placeholder="Ex: Geral, Shaft Principal, Cozinha, Sacada"
-                 class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#135C6C] focus:outline-none">
+          <select id="environmentSelect" onchange="handleEnvironmentChange()" class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#135C6C] focus:outline-none font-medium">
+            <option value="Geral">Geral</option>
+            <option value="Sala">Sala</option>
+            <option value="Cozinha">Cozinha</option>
+            <option value="Lavanderia">Lavanderia</option>
+            <option value="Banheiros">Banheiros</option>
+            <option value="Quarto 1">Quarto 1</option>
+            <option value="Quarto 2">Quarto 2</option>
+            <option value="Quarto 3">Quarto 3</option>
+            <option value="Quarto 4">Quarto 4</option>
+            <option value="Corredores">Corredores</option>
+            <option value="Varanda">Varanda</option>
+            <option value="OUTRO">Outro (Digitar)</option>
+          </select>
+
+          <input type="text" id="environmentCustomInput" placeholder="Digite o nome do ambiente..."
+                 class="w-full mt-2 p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#135C6C] focus:outline-none hidden">
         </div>
       </div>
     </section>
@@ -192,77 +207,76 @@
     lucide.createIcons();
 
     /* =====================================================
-       ESTADO GERAL
+        ESTADO GERAL
     ===================================================== */
     let currentAddressStr = "Balneário Camboriú - SC";
     let capturedPhotos = [];   // espelho do que está salvo no IndexedDB
     let galleryUrls = [];      // object URLs da galeria (para liberar memória)
-    let pendingMeta = null;    // metadados da foto em preview (iguais aos da marca d'água)
+    let pendingMeta = null;    // metadados da foto em preview
 
-    // Lado maior da foto (px). Suficiente para a marca d'água legível e para o A4.
     const MAX_SIDE = 1600;
     const JPEG_QUALITY = 0.82;
 
     const floorsSchedule = [
-      { id: "01", name: "01 TÉRREO", type: "Área Comum / Acesso", dates: "Conforme Cronograma Áreas Comuns" },
-      { id: "02", name: "02 G1", type: "Garagens", dates: "18/11/26 a 19/11/26" },
-      { id: "03", name: "03 G2", type: "Garagens", dates: "18/11/26 a 19/11/26" },
-      { id: "04", name: "04 G3", type: "Garagens", dates: "16/11/26 a 17/11/26" },
-      { id: "05", name: "05 G4", type: "Garagens", dates: "16/11/26 a 17/11/26" },
-      { id: "06", name: "06 G5", type: "Garagens", dates: "16/11/26 a 17/11/26" },
-      { id: "07", name: "07 LAZER 1", type: "Lazer Áreas Comuns", dates: "Conforme Cronograma Áreas Comuns" },
-      { id: "08", name: "08 LAZER 2", type: "Lazer Áreas Comuns", dates: "Conforme Cronograma Áreas Comuns" },
-      { id: "09", name: "09 DIF. 1", type: "Diferenciado 1", dates: "16/11/26 a 18/11/26" },
-      { id: "10", name: "10 DIF. 2", type: "Diferenciado 2", dates: "11/11/26 a 13/11/26" },
-      { id: "11", name: "11 TIPO A", type: "Tipo A", dates: "Executado por Modelare" },
-      { id: "12", name: "12 TIPO A", type: "Tipo A", dates: "19/08/26 a 21/08/26" },
-      { id: "13", name: "13 TIPO A", type: "Tipo A", dates: "14/09/26 a 22/09/26" },
-      { id: "14", name: "14 TIPO A", type: "Tipo A", dates: "14/09/26 a 22/09/26" },
-      { id: "15", name: "15 TIPO A", type: "Tipo A", dates: "22/09/26 a 23/09/26" },
-      { id: "16", name: "16 TIPO A", type: "Tipo A", dates: "22/09/26 a 23/09/26" },
-      { id: "17", name: "17 TIPO A", type: "Tipo A", dates: "23/09/26 a 25/09/26" },
-      { id: "18", name: "18 TIPO A", type: "Tipo A", dates: "23/09/26 a 25/09/26" },
-      { id: "19", name: "19 TIPO A", type: "Tipo A", dates: "24/09/26 a 25/09/26" },
-      { id: "20", name: "20 TIPO B", type: "Tipo B", dates: "25/09/26 a 28/09/26" },
-      { id: "21", name: "21 TIPO B", type: "Tipo B", dates: "25/09/26 a 28/09/26" },
-      { id: "22", name: "22 TIPO B", type: "Tipo B", dates: "25/09/26 a 28/09/26" },
-      { id: "23", name: "23 TIPO B", type: "Tipo B", dates: "29/09/26 a 30/09/26" },
-      { id: "24", name: "24 TIPO B", type: "Tipo B", dates: "29/09/26 a 30/09/26" },
-      { id: "25", name: "25 TIPO B", type: "Tipo B", dates: "29/09/26 a 30/09/26" },
-      { id: "26", name: "26 TIPO B", type: "Tipo B", dates: "30/09/26 a 02/10/26" },
-      { id: "27", name: "27 TIPO B", type: "Tipo B", dates: "30/09/26 a 02/10/26" },
-      { id: "28", name: "28 TIPO B", type: "Tipo B", dates: "30/09/26 a 02/10/26" },
-      { id: "29", name: "29 TIPO B", type: "Tipo B", dates: "07/10/26 a 09/10/26" },
-      { id: "30", name: "30 TIPO C", type: "Tipo C", dates: "07/10/26 a 09/10/26" },
-      { id: "31", name: "31 TIPO C", type: "Tipo C", dates: "07/10/26 a 09/10/26" },
-      { id: "32", name: "32 TIPO C", type: "Tipo C", dates: "13/10/26 a 15/10/26" },
-      { id: "33", name: "33 TIPO C", type: "Tipo C", dates: "13/10/26 a 15/10/26" },
-      { id: "34", name: "34 TIPO C", type: "Tipo C", dates: "16/10/26 a 20/10/26" },
-      { id: "35", name: "35 TIPO C", type: "Tipo C", dates: "16/10/26 a 20/10/26" },
-      { id: "36", name: "36 TIPO C", type: "Tipo C", dates: "21/10/26 a 23/10/26" },
-      { id: "37", name: "37 TIPO C", type: "Tipo C", dates: "21/10/26 a 23/10/26" },
-      { id: "38", name: "38 TIPO C", type: "Tipo C", dates: "26/10/26 a 28/10/26" },
-      { id: "39", name: "39 TIPO C", type: "Tipo C", dates: "26/10/26 a 28/10/26" },
-      { id: "40", name: "40 TIPO C", type: "Tipo C", dates: "26/10/26 a 28/10/26" },
-      { id: "41", name: "41 TIPO C", type: "Tipo C", dates: "28/10/26 a 30/10/26" },
-      { id: "42", name: "42 TIPO C", type: "Tipo C", dates: "28/10/26 a 30/10/26" },
-      { id: "43", name: "43 TIPO C", type: "Tipo C", dates: "28/10/26 a 30/10/26" },
-      { id: "44", name: "44 TIPO C", type: "Tipo C", dates: "03/11/26 a 05/11/26" },
-      { id: "45", name: "45 TIPO C", type: "Tipo C", dates: "03/11/26 a 05/11/26" },
-      { id: "46", name: "46 TIPO C", type: "Tipo C", dates: "03/11/26 a 05/11/26" },
-      { id: "47", name: "47 TIPO C", type: "Tipo C", dates: "03/11/26 a 05/11/26" },
-      { id: "48", name: "48 TIPO C", type: "Tipo C", dates: "06/11/26 a 10/11/26" },
-      { id: "49", name: "49 TIPO C", type: "Tipo C", dates: "06/11/26 a 10/11/26" },
-      { id: "50", name: "50 MASTER", type: "Master", dates: "06/11/26 a 10/11/26" },
-      { id: "51", name: "51 MASTER", type: "Master", dates: "06/11/26 a 10/11/26" },
-      { id: "52", name: "52 MASTER", type: "Master", dates: "11/11/26 a 13/11/26" },
-      { id: "53", name: "53 MASTER", type: "Master", dates: "11/11/26 a 13/11/26" },
-      { id: "54", name: "54 DUPLEX INF. + TIPO", type: "Duplex Inf. + Tipo", dates: "11/11/26 a 13/11/26" },
-      { id: "55", name: "55 DUPLEX SUP. ROOFTOP", type: "Duplex Sup. Rooftop", dates: "Conforme Cronograma Rooftop" }
+      { id: "01", name: "TÉRREO", type: "Área Comum / Acesso", dates: "Conforme Cronograma Áreas Comuns" },
+      { id: "02", name: "G1 - Garagem", type: "Garagens", dates: "18/11/26 a 19/11/26" },
+      { id: "03", name: "G2 - Garagem", type: "Garagens", dates: "18/11/26 a 19/11/26" },
+      { id: "04", name: "G3 - Garagem", type: "Garagens", dates: "16/11/26 a 17/11/26" },
+      { id: "05", name: "G4 - Garagem", type: "Garagens", dates: "16/11/26 a 17/11/26" },
+      { id: "06", name: "G5 - Garagem", type: "Garagens", dates: "16/11/26 a 17/11/26" },
+      { id: "07", name: "L1 - Lazer", type: "Lazer Áreas Comuns", dates: "Conforme Cronograma Áreas Comuns" },
+      { id: "08", name: "L2 - Lazer", type: "Lazer Áreas Comuns", dates: "Conforme Cronograma Áreas Comuns" },
+      { id: "09", name: "9º Pavimento", type: "Diferenciado 1", dates: "16/11/26 a 18/11/26" },
+      { id: "10", name: "10º Pavimento", type: "Diferenciado 2", dates: "11/11/26 a 13/11/26" },
+      { id: "11", name: "11º Pavimento", type: "Pavimento Privativo", dates: "Executado por Modelare" },
+      { id: "12", name: "12º Pavimento", type: "Pavimento Privativo", dates: "19/08/26 a 21/08/26" },
+      { id: "13", name: "13º Pavimento", type: "Pavimento Privativo", dates: "14/09/26 a 22/09/26" },
+      { id: "14", name: "14º Pavimento", type: "Pavimento Privativo", dates: "14/09/26 a 22/09/26" },
+      { id: "15", name: "15º Pavimento", type: "Pavimento Privativo", dates: "22/09/26 a 23/09/26" },
+      { id: "16", name: "16º Pavimento", type: "Pavimento Privativo", dates: "22/09/26 a 23/09/26" },
+      { id: "17", name: "17º Pavimento", type: "Pavimento Privativo", dates: "23/09/26 a 25/09/26" },
+      { id: "18", name: "18º Pavimento", type: "Pavimento Privativo", dates: "23/09/26 a 25/09/26" },
+      { id: "19", name: "19º Pavimento", type: "Pavimento Privativo", dates: "24/09/26 a 25/09/26" },
+      { id: "20", name: "20º Pavimento", type: "Pavimento Privativo", dates: "25/09/26 a 28/09/26" },
+      { id: "21", name: "21º Pavimento", type: "Pavimento Privativo", dates: "25/09/26 a 28/09/26" },
+      { id: "22", name: "22º Pavimento", type: "Pavimento Privativo", dates: "25/09/26 a 28/09/26" },
+      { id: "23", name: "23º Pavimento", type: "Pavimento Privativo", dates: "29/09/26 a 30/09/26" },
+      { id: "24", name: "24º Pavimento", type: "Pavimento Privativo", dates: "29/09/26 a 30/09/26" },
+      { id: "25", name: "25º Pavimento", type: "Pavimento Privativo", dates: "29/09/26 a 30/09/26" },
+      { id: "26", name: "26º Pavimento", type: "Pavimento Privativo", dates: "30/09/26 a 02/10/26" },
+      { id: "27", name: "27º Pavimento", type: "Pavimento Privativo", dates: "30/09/26 a 02/10/26" },
+      { id: "28", name: "28º Pavimento", type: "Pavimento Privativo", dates: "30/09/26 a 02/10/26" },
+      { id: "29", name: "29º Pavimento", type: "Pavimento Privativo", dates: "07/10/26 a 09/10/26" },
+      { id: "30", name: "30º Pavimento", type: "Pavimento Privativo", dates: "07/10/26 a 09/10/26" },
+      { id: "31", name: "31º Pavimento", type: "Pavimento Privativo", dates: "07/10/26 a 09/10/26" },
+      { id: "32", name: "32º Pavimento", type: "Pavimento Privativo", dates: "13/10/26 a 15/10/26" },
+      { id: "33", name: "33º Pavimento", type: "Pavimento Privativo", dates: "13/10/26 a 15/10/26" },
+      { id: "34", name: "34º Pavimento", type: "Pavimento Privativo", dates: "16/10/26 a 20/10/26" },
+      { id: "35", name: "35º Pavimento", type: "Pavimento Privativo", dates: "16/10/26 a 20/10/26" },
+      { id: "36", name: "36º Pavimento", type: "Pavimento Privativo", dates: "21/10/26 a 23/10/26" },
+      { id: "37", name: "37º Pavimento", type: "Pavimento Privativo", dates: "21/10/26 a 23/10/26" },
+      { id: "38", name: "38º Pavimento", type: "Pavimento Privativo", dates: "26/10/26 a 28/10/26" },
+      { id: "39", name: "39º Pavimento", type: "Pavimento Privativo", dates: "26/10/26 a 28/10/26" },
+      { id: "40", name: "40º Pavimento", type: "Pavimento Privativo", dates: "26/10/26 a 28/10/26" },
+      { id: "41", name: "41º Pavimento", type: "Pavimento Privativo", dates: "28/10/26 a 30/10/26" },
+      { id: "42", name: "42º Pavimento", type: "Pavimento Privativo", dates: "28/10/26 a 30/10/26" },
+      { id: "43", name: "43º Pavimento", type: "Pavimento Privativo", dates: "28/10/26 a 30/10/26" },
+      { id: "44", name: "44º Pavimento", type: "Pavimento Privativo", dates: "03/11/26 a 05/11/26" },
+      { id: "45", name: "45º Pavimento", type: "Pavimento Privativo", dates: "03/11/26 a 05/11/26" },
+      { id: "46", name: "46º Pavimento", type: "Pavimento Privativo", dates: "03/11/26 a 05/11/26" },
+      { id: "47", name: "47º Pavimento", type: "Pavimento Privativo", dates: "03/11/26 a 05/11/26" },
+      { id: "48", name: "48º Pavimento", type: "Pavimento Privativo", dates: "06/11/26 a 10/11/26" },
+      { id: "49", name: "49º Pavimento", type: "Pavimento Privativo", dates: "06/11/26 a 10/11/26" },
+      { id: "50", name: "50º Pavimento", type: "Master", dates: "06/11/26 a 10/11/26" },
+      { id: "51", name: "51º Pavimento", type: "Master", dates: "06/11/26 a 10/11/26" },
+      { id: "52", name: "52º Pavimento", type: "Master", dates: "11/11/26 a 13/11/26" },
+      { id: "53", name: "53º Pavimento", type: "Master", dates: "11/11/26 a 13/11/26" },
+      { id: "54", name: "54º Pavimento", type: "Duplex Inf.", dates: "11/11/26 a 13/11/26" },
+      { id: "55", name: "55º Pavimento", type: "Duplex Sup. Rooftop", dates: "Conforme Cronograma Rooftop" }
     ];
 
     /* =====================================================
-       UTILITÁRIOS
+        UTILITÁRIOS
     ===================================================== */
     function escapeHtml(str) {
       return String(str)
@@ -273,21 +287,28 @@
         .replace(/'/g, '&#39;');
     }
 
-    function showBusy(text) {
-      document.getElementById('busyText').innerText = text || 'Processando...';
-      document.getElementById('busyProgress').innerText = '';
-      document.getElementById('busyOverlay').classList.remove('hidden');
+    function getSelectedEnvironment() {
+      const selectVal = document.getElementById('environmentSelect').value;
+      if (selectVal === 'OUTRO') {
+        return document.getElementById('environmentCustomInput').value.trim() || 'Geral';
+      }
+      return selectVal;
     }
-    function setBusyProgress(text) {
-      document.getElementById('busyProgress').innerText = text;
+
+    function handleEnvironmentChange() {
+      const selectVal = document.getElementById('environmentSelect').value;
+      const customInput = document.getElementById('environmentCustomInput');
+      if (selectVal === 'OUTRO') {
+        customInput.classList.remove('hidden');
+        customInput.focus();
+      } else {
+        customInput.classList.add('hidden');
+      }
+      saveForm();
     }
-    function hideBusy() {
-      document.getElementById('busyOverlay').classList.add('hidden');
-    }
-    const nextFrame = () => new Promise(r => setTimeout(r, 0));
 
     /* =====================================================
-       PERSISTÊNCIA DAS FOTOS (IndexedDB)
+        PERSISTÊNCIA DAS FOTOS (IndexedDB)
     ===================================================== */
     const DB_NAME = 'vistoria-fg-db';
     const STORE = 'photos';
@@ -347,17 +368,17 @@
     }
 
     /* =====================================================
-       PERSISTÊNCIA DO FORMULÁRIO (localStorage - dados pequenos)
+        PERSISTÊNCIA DO FORMULÁRIO (localStorage)
     ===================================================== */
     const FORM_KEY = 'vistoria-fg-form-v1';
-    const FORM_FIELDS = ['buildingName', 'inspectorName', 'inspectorSector', 'floorSelect', 'environmentInput'];
+    const FORM_FIELDS = ['buildingName', 'inspectorName', 'inspectorSector', 'floorSelect', 'environmentSelect', 'environmentCustomInput'];
 
     function saveForm() {
       try {
         const data = {};
         FORM_FIELDS.forEach(id => { data[id] = document.getElementById(id).value; });
         localStorage.setItem(FORM_KEY, JSON.stringify(data));
-      } catch (e) { /* armazenamento indisponível: ignora */ }
+      } catch (e) { /* armazenamento indisponível */ }
     }
 
     function restoreForm() {
@@ -370,18 +391,21 @@
         });
       } catch (e) { /* ignora */ }
       document.getElementById('headerBuildingName').innerText = document.getElementById('buildingName').value;
+      handleEnvironmentChange();
     }
 
     function bindFormPersistence() {
       FORM_FIELDS.forEach(id => {
         const el = document.getElementById(id);
-        el.addEventListener('input', saveForm);
-        el.addEventListener('change', saveForm);
+        if (el) {
+          el.addEventListener('input', saveForm);
+          el.addEventListener('change', saveForm);
+        }
       });
     }
 
     /* =====================================================
-       PAVIMENTOS
+        PAVIMENTOS
     ===================================================== */
     function populateFloors() {
       const select = document.getElementById('floorSelect');
@@ -398,7 +422,7 @@
     }
 
     /* =====================================================
-       GEOLOCALIZAÇÃO
+        GEOLOCALIZAÇÃO
     ===================================================== */
     function getLocation() {
       if ("geolocation" in navigator) {
@@ -428,7 +452,7 @@
     }
 
     /* =====================================================
-       INICIALIZAÇÃO
+        INICIALIZAÇÃO
     ===================================================== */
     window.onload = async () => {
       populateFloors();
@@ -437,7 +461,6 @@
       bindFormPersistence();
       getLocation();
 
-      // Pede ao navegador para não apagar os dados automaticamente
       if (navigator.storage && navigator.storage.persist) {
         navigator.storage.persist().catch(() => {});
       }
@@ -446,19 +469,19 @@
         capturedPhotos = await loadPhotos();
       } catch (e) {
         console.error(e);
-        alert('Não foi possível acessar o armazenamento local do navegador. As fotos não serão salvas após recarregar a página.');
+        alert('Não foi possível acessar o armazenamento local do navegador.');
       }
       renderGallery();
     };
 
     /* =====================================================
-       CAPTURA DA FOTO (redimensiona + marca d'água)
+        CAPTURA DA FOTO (redimensiona + marca d'água)
     ===================================================== */
     function processImage(event) {
       const file = event.target.files[0];
       if (!file) return;
 
-      const url = URL.createObjectURL(file);   // evita converter o arquivo inteiro em base64
+      const url = URL.createObjectURL(file);
       const img = new Image();
       img.onload = function () {
         URL.revokeObjectURL(url);
@@ -475,7 +498,6 @@
       const canvas = document.getElementById('photoCanvas');
       const ctx = canvas.getContext('2d');
 
-      // Redimensiona para no máximo MAX_SIDE no lado maior
       const srcW = img.naturalWidth || img.width;
       const srcH = img.naturalHeight || img.height;
       const scale = Math.min(1, MAX_SIDE / Math.max(srcW, srcH));
@@ -483,10 +505,10 @@
       canvas.height = Math.round(srcH * scale);
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-      const building = document.getElementById('buildingName').value || 'SAPPHIRE TOWER';
+      const building = document.getElementById('buildingName').value || 'EMPREENDIMENTO';
       const inspector = document.getElementById('inspectorName').value || 'AUDITOR TÉCNICO';
       const floor = document.getElementById('floorSelect').value;
-      const env = document.getElementById('environmentInput').value || 'GERAL';
+      const env = getSelectedEnvironment();
       const now = new Date();
       const dateStr = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR');
 
@@ -497,7 +519,6 @@
         `GPS: ${currentLat}, ${currentLng}`
       ];
 
-      // Ajusta a fonte para a linha mais longa caber na largura da foto
       let fontSize = Math.max(12, Math.floor(canvas.width / 38));
       const fits = () => {
         ctx.font = `bold ${fontSize}px sans-serif`;
@@ -510,11 +531,9 @@
       const lineHeight = fontSize * 1.35;
       const boxHeight = (lines.length * lineHeight) + (padding * 1.8);
 
-      // Faixa de fundo da marca d'água
       ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
       ctx.fillRect(0, canvas.height - boxHeight, canvas.width, boxHeight);
 
-      // Linha decorativa
       ctx.fillStyle = '#135C6C';
       ctx.fillRect(0, canvas.height - boxHeight, canvas.width, Math.max(3, fontSize * 0.15));
 
@@ -524,10 +543,9 @@
         ctx.fillText(line, padding, canvas.height - boxHeight + padding + (index * lineHeight) + (fontSize * 0.75));
       });
 
-      // Guarda os mesmos dados que foram carimbados na imagem
       pendingMeta = {
         floor: floor,
-        env: document.getElementById('environmentInput').value || 'Geral',
+        env: env,
         location: currentAddressStr,
         lat: currentLat,
         lng: currentLng,
@@ -576,14 +594,14 @@
         alert('✅ Foto e observação salvas no relatório!');
       } catch (e) {
         console.error(e);
-        alert('Não foi possível salvar a foto. Verifique o espaço de armazenamento do aparelho e tente novamente.');
+        alert('Não foi possível salvar a foto.');
       } finally {
         btn.disabled = false;
       }
     }
 
     /* =====================================================
-       GALERIA
+        GALERIA
     ===================================================== */
     function renderGallery() {
       const gallery = document.getElementById('gallery');
@@ -643,16 +661,15 @@
     }
 
     /* =====================================================
-       GERAÇÃO DO PDF (jsPDF) - 4 fotos por página (2x2)
+        GERAÇÃO DO PDF (jsPDF)
     ===================================================== */
     const TEAL = [19, 92, 108];
     const PAGE_W = 210, PAGE_H = 297, MARGIN = 8, GAP = 6, ROW_GAP = 4;
-    const CARD_W = (PAGE_W - MARGIN * 2 - GAP) / 2;   // 94 mm
+    const CARD_W = (PAGE_W - MARGIN * 2 - GAP) / 2;
     const CARD_H = 118;
-    const CARDS_TOP_FIRST = 44;   // 1ª página (com cabeçalho institucional)
-    const CARDS_TOP_NEXT = 14;    // demais páginas
+    const CARDS_TOP_FIRST = 44;
+    const CARDS_TOP_NEXT = 14;
 
-    // Fontes padrão do jsPDF não suportam todos os caracteres: normaliza o texto
     function pdfSafe(str) {
       return String(str == null ? '' : str)
         .replace(/[\u2013\u2014]/g, '-')
@@ -665,281 +682,7 @@
       if (doc.getTextWidth(text) <= maxW) return text;
       let t = text;
       while (t.length > 1 && doc.getTextWidth(t + '...') > maxW) t = t.slice(0, -1);
-      return t.trimEnd() + '...';
-    }
-
-    function blobToDataURL(blob) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(blob);
-      });
-    }
-
-    function getImageSize(dataUrl) {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
-        img.onerror = reject;
-        img.src = dataUrl;
-      });
-    }
-
-    // Tenta carregar o logo; se não existir (ou o canvas ficar "tainted"), segue sem logo
-    async function loadLogo() {
-      const candidates = ['logo-fg.png', 'logo-fg.png.png'];
-      for (const src of candidates) {
-        try {
-          const img = await new Promise((resolve, reject) => {
-            const i = new Image();
-            i.onload = () => resolve(i);
-            i.onerror = reject;
-            i.src = src;
-          });
-          const c = document.createElement('canvas');
-          c.width = img.naturalWidth;
-          c.height = img.naturalHeight;
-          c.getContext('2d').drawImage(img, 0, 0);
-          return { data: c.toDataURL('image/png'), w: img.naturalWidth, h: img.naturalHeight };
-        } catch (e) { /* tenta o próximo */ }
-      }
-      return null;
-    }
-
-    function drawFirstPageHeader(doc, info) {
-      const logoH = 15;
-      let logoW = 0;
-      if (info.logo) {
-        logoW = Math.min(40, logoH * (info.logo.w / info.logo.h));
-        doc.addImage(info.logo.data, 'PNG', PAGE_W - MARGIN - logoW, 7, logoW, logoW * (info.logo.h / info.logo.w));
-      }
-      const textMaxW = PAGE_W - MARGIN * 2 - logoW - 4;
-
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(13);
-      doc.setTextColor(15, 23, 42);
-      doc.text('RELATÓRIO FOTOGRÁFICO DE VISTORIA', MARGIN, 14);
-
-      doc.setFontSize(9);
-      doc.setTextColor(...TEAL);
-      doc.text(fitText(doc, pdfSafe('EMPREENDIMENTO: ' + info.building), textMaxW), MARGIN, 19.5);
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(7.5);
-      doc.setTextColor(107, 114, 128);
-      doc.text(fitText(doc, pdfSafe(info.dateStr + ' - ' + info.address), textMaxW), MARGIN, 24);
-
-      doc.setDrawColor(...TEAL);
-      doc.setLineWidth(0.6);
-      doc.line(MARGIN, 27, PAGE_W - MARGIN, 27);
-
-      // Caixa de informações do auditor
-      doc.setFillColor(248, 250, 252);
-      doc.setDrawColor(226, 232, 240);
-      doc.setLineWidth(0.25);
-      doc.rect(MARGIN, 29, PAGE_W - MARGIN * 2, 7, 'FD');
-      doc.setFontSize(7.5);
-      const half = (PAGE_W - MARGIN * 2) / 2;
-
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(107, 114, 128);
-      doc.text('Vistoriador / Auditor: ', MARGIN + 2, 33.6);
-      const w1 = doc.getTextWidth('Vistoriador / Auditor: ');
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(30, 41, 59);
-      doc.text(fitText(doc, pdfSafe(info.inspector), half - w1 - 4), MARGIN + 2 + w1, 33.6);
-
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(107, 114, 128);
-      doc.text('Empresa / Setor: ', MARGIN + half + 2, 33.6);
-      const w2 = doc.getTextWidth('Empresa / Setor: ');
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(30, 41, 59);
-      doc.text(fitText(doc, pdfSafe(info.sector), half - w2 - 4), MARGIN + half + 2 + w2, 33.6);
-
-      // Título da seção
-      doc.setFontSize(9);
-      doc.setTextColor(...TEAL);
-      doc.text(`Registros e Evidências Fotográficas (${info.count})`, MARGIN, 41);
-      doc.setDrawColor(209, 213, 219);
-      doc.setLineWidth(0.25);
-      doc.line(MARGIN, 42.5, PAGE_W - MARGIN, 42.5);
-    }
-
-    function drawRunningHeader(doc, info) {
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(7);
-      doc.setTextColor(107, 114, 128);
-      doc.text(fitText(doc, pdfSafe('Relatório Fotográfico de Vistoria - ' + info.building), 140), MARGIN, 9);
-      doc.text(pdfSafe(info.dateStr), PAGE_W - MARGIN, 9, { align: 'right' });
-      doc.setDrawColor(209, 213, 219);
-      doc.setLineWidth(0.25);
-      doc.line(MARGIN, 10.5, PAGE_W - MARGIN, 10.5);
-    }
-
-    function drawLabelValue(doc, label, value, x, y, maxW, maxLines) {
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(7);
-      doc.setTextColor(75, 85, 99);
-      doc.text(label, x, y);
-      const lw = doc.getTextWidth(label + ' ');
-      doc.setFont('helvetica', 'normal');
-      let lines = doc.splitTextToSize(pdfSafe(value), maxW - lw);
-      if (lines.length > maxLines) {
-        lines = lines.slice(0, maxLines);
-        lines[maxLines - 1] = fitText(doc, lines[maxLines - 1].trimEnd() + '...', maxW - lw);
-      }
-      lines.forEach((ln, i) => doc.text(ln, x + lw, y + i * 3.4));
-      return lines.length;
-    }
-
-    async function drawCard(doc, photo, number, x, y) {
-      const W = CARD_W, H = CARD_H;
-
-      // Moldura
-      doc.setDrawColor(203, 213, 225);
-      doc.setLineWidth(0.25);
-      doc.rect(x, y, W, H);
-
-      // Cabeçalho do card
-      doc.setFillColor(...TEAL);
-      doc.rect(x, y, W, 7, 'F');
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8);
-      doc.setTextColor(255, 255, 255);
-      const left = fitText(doc, pdfSafe(`#${number} - ${photo.floor}`), W * 0.55);
-      doc.text(left, x + 2, y + 4.7);
-      const leftW = doc.getTextWidth(left);
-
-      doc.setFontSize(7);
-      const envMax = W - 4 - leftW - 6;
-      const envText = fitText(doc, pdfSafe('Ambiente: ' + photo.env), Math.max(15, envMax - 3));
-      const envW = doc.getTextWidth(envText) + 3;
-      doc.setFillColor(255, 255, 255);
-      doc.roundedRect(x + W - 2 - envW, y + 1.4, envW, 4.2, 0.8, 0.8, 'F');
-      doc.setTextColor(...TEAL);
-      doc.text(envText, x + W - 2 - envW + 1.5, y + 4.5);
-
-      // Imagem (modo "contain": mantém a marca d'água inteira visível)
-      const boxX = x + 1.5, boxY = y + 8.5, boxW = W - 3, boxH = 66;
-      doc.setFillColor(0, 0, 0);
-      doc.rect(boxX, boxY, boxW, boxH, 'F');
-
-      const dataUrl = await blobToDataURL(photo.blob);
-      const size = await getImageSize(dataUrl);
-      const ratio = Math.min(boxW / size.w, boxH / size.h);
-      const dw = size.w * ratio, dh = size.h * ratio;
-      doc.addImage(dataUrl, 'JPEG', boxX + (boxW - dw) / 2, boxY + (boxH - dh) / 2, dw, dh, undefined, 'FAST');
-
-      // Metadados
-      drawLabelValue(doc, 'Data/Hora:', photo.timestamp, x + 2, y + 78.2, W - 4, 1);
-      drawLabelValue(doc, 'Localização:', photo.location, x + 2, y + 81.6, W - 4, 2);
-
-      // Observações
-      const obsY = y + 87.5;
-      const obsH = H - 87.5 - 1.5;
-      doc.setFillColor(249, 250, 251);
-      doc.setDrawColor(229, 231, 235);
-      doc.rect(x + 1.5, obsY, W - 3, obsH, 'FD');
-
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(7);
-      doc.setTextColor(30, 41, 59);
-      doc.text('Observações / Apontamentos:', x + 3, obsY + 3.6);
-
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(55, 65, 81);
-      const maxLines = Math.floor((obsH - 8.6) / 2.9);
-      let lines = doc.splitTextToSize(pdfSafe(photo.notes), W - 6);
-      if (lines.length > maxLines) {
-        lines = lines.slice(0, maxLines);
-        lines[maxLines - 1] = fitText(doc, lines[maxLines - 1].trimEnd() + '...', W - 6);
-      }
-      doc.text(lines, x + 3, obsY + 7.6);
-    }
-
-    async function generatePDFReport() {
-      if (capturedPhotos.length === 0) {
-        alert("Adicione pelo menos 1 foto ao relatório para gerar o documento.");
-        return;
-      }
-      if (!window.jspdf) {
-        alert('A biblioteca de PDF (jsPDF) não foi carregada. Verifique a conexão com a internet e recarregue a página.');
-        return;
-      }
-
-      showBusy('Gerando PDF...');
-      await nextFrame();
-
-      try {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-
-        const info = {
-          building: document.getElementById('buildingName').value || 'SAPPHIRE TOWER',
-          inspector: document.getElementById('inspectorName').value || 'Auditor Técnico',
-          sector: document.getElementById('inspectorSector').value || 'Auditoria Interna / Qualidade',
-          dateStr: new Date().toLocaleString('pt-BR'),
-          address: currentAddressStr,
-          count: capturedPhotos.length,
-          logo: await loadLogo()
-        };
-
-        // Ordena por pavimento (ordem do cronograma) e depois pela ordem de captura
-        const floorIndex = name => {
-          const i = floorsSchedule.findIndex(f => f.name === name);
-          return i === -1 ? 9999 : i;
-        };
-        const sorted = [...capturedPhotos].sort((a, b) =>
-          floorIndex(a.floor) - floorIndex(b.floor) || a.id - b.id
-        );
-
-        drawFirstPageHeader(doc, info);
-
-        for (let i = 0; i < sorted.length; i++) {
-          const perPage = 4;
-          const pageIdx = Math.floor(i / perPage);
-          const slot = i % perPage;
-
-          if (slot === 0 && i > 0) {
-            doc.addPage();
-            drawRunningHeader(doc, info);
-          }
-
-          const col = slot % 2;
-          const row = Math.floor(slot / 2);
-          const top = pageIdx === 0 ? CARDS_TOP_FIRST : CARDS_TOP_NEXT;
-          const x = MARGIN + col * (CARD_W + GAP);
-          const y = top + row * (CARD_H + ROW_GAP);
-
-          setBusyProgress(`Foto ${i + 1} de ${sorted.length}`);
-          await drawCard(doc, sorted[i], i + 1, x, y);
-          await nextFrame();   // mantém a tela responsiva e libera memória
-        }
-
-        // Rodapé com numeração de páginas
-        const total = doc.getNumberOfPages();
-        for (let p = 1; p <= total; p++) {
-          doc.setPage(p);
-          doc.setFont('helvetica', 'normal');
-          doc.setFontSize(7);
-          doc.setTextColor(107, 114, 128);
-          doc.text(`Página ${p} de ${total}`, PAGE_W / 2, PAGE_H - 4, { align: 'center' });
-        }
-
-        const pad = n => String(n).padStart(2, '0');
-        const d = new Date();
-        const stamp = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
-        const slug = pdfSafe(info.building).normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-          .replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40) || 'Vistoria';
-        doc.save(`Relatorio_Vistoria_${slug}_${stamp}.pdf`);
-      } catch (err) {
-        console.error(err);
-        alert('Erro ao gerar o PDF: ' + (err && err.message ? err.message : err));
-      } finally {
-        hideBusy();
-      }
+      return t + '...';
     }
   </script>
 </body>
