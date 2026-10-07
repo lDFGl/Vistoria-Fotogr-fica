@@ -139,8 +139,8 @@
           <i data-lucide="eye" class="w-3.5 h-3.5 text-[#135C6C]"></i> Preview da Imagem com Marca D'água:
         </p>
         
-        <div class="relative rounded-lg overflow-hidden border border-gray-300 shadow-inner max-h-[320px] bg-black flex items-center justify-center">
-          <canvas id="photoCanvas" class="max-w-full max-h-[300px] w-auto h-auto block object-contain"></canvas>
+        <div class="relative rounded-lg overflow-hidden border border-gray-300 shadow-inner bg-black flex items-center justify-center p-1">
+          <canvas id="photoCanvas" class="max-w-full h-auto max-h-[350px] block object-contain"></canvas>
         </div>
 
         <div>
@@ -330,7 +330,7 @@
           ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
           ctx.fillRect(0, canvas.height - boxHeight, canvas.width, boxHeight);
 
-          // Linha decorativa verde/azul
+          // Linha decorativa
           ctx.fillStyle = '#135C6C';
           ctx.fillRect(0, canvas.height - boxHeight, canvas.width, 6);
 
@@ -350,7 +350,7 @@
 
     function addPhotoToInspection() {
       const canvas = document.getElementById('photoCanvas');
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
       const floor = document.getElementById('floorSelect').value;
       const env = document.getElementById('environmentInput').value || 'Geral';
       const notes = document.getElementById('photoNotes').value || 'Sem inconformidades anotadas.';
@@ -368,7 +368,7 @@
       document.getElementById('previewContainer').classList.add('hidden');
       document.getElementById('cameraInput').value = '';
       document.getElementById('photoNotes').value = '';
-      alert('✅ Foto e observação vinculadas ao relatório com sucesso!');
+      alert('✅ Foto e observação vinculadas ao relatório!');
     }
 
     function renderGallery() {
@@ -382,7 +382,7 @@
 
       gallery.innerHTML = capturedPhotos.map((item, idx) => `
         <div class="relative rounded-lg overflow-hidden border border-gray-200 bg-gray-50 shadow-sm flex flex-col">
-          <img src="${item.img}" class="w-full h-28 object-cover">
+          <img src="${item.img}" class="w-full h-32 object-cover">
           <div class="p-2 text-[10px] space-y-1">
             <p class="font-bold text-slate-800">${item.floor}</p>
             <p class="text-[#135C6C] font-semibold truncate">Ambiente: ${item.env}</p>
@@ -424,7 +424,7 @@
           <style>
             @page { size: A4; margin: 10mm; }
             body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: white; color: #1e293b; }
-            .report-card-img { max-height: 230px; object-fit: contain; background: #000; }
+            .report-card-img { width: 100%; height: auto; max-height: 380px; object-fit: contain; display: block; margin: 0 auto; }
           </style>
         </head>
         <body class="p-4">
@@ -454,26 +454,26 @@
           </div>
 
           <!-- Lista de Fotos no Relatório -->
-          <div class="space-y-4">
+          <div class="space-y-6">
             <h2 class="text-sm font-bold border-b border-gray-300 pb-1 text-[#135C6C]">
               Registros e Evidências Fotográficas (${capturedPhotos.length})
             </h2>
             
-            <div class="grid grid-cols-1 gap-4">
+            <div class="grid grid-cols-1 gap-6">
               ${capturedPhotos.map((photo, index) => `
-                <div class="border border-slate-300 rounded-lg overflow-hidden break-inside-avoid bg-white">
-                  <div class="bg-[#135C6C] text-white px-3 py-1.5 flex justify-between items-center text-xs">
+                <div class="border border-slate-300 rounded-lg overflow-hidden break-inside-avoid bg-white shadow-sm">
+                  <div class="bg-[#135C6C] text-white px-3 py-2 flex justify-between items-center text-xs">
                     <span class="font-bold">#${index + 1} - Pavimento:${photo.floor}</span>
-                    <span class="bg-white text-[#135C6C] px-2 py-0.5 rounded font-semibold text-[11px]">Ambiente: ${photo.env}</span>
+                    <span class="bg-white text-[#135C6C] px-2.5 py-0.5 rounded font-semibold text-[11px]">Ambiente: ${photo.env}</span>
                   </div>
-                  <div class="p-3 grid grid-cols-12 gap-3 items-center">
-                    <div class="col-span-6 flex justify-center bg-gray-900 rounded overflow-hidden">
-                      <img src="${photo.img}" class="report-card-img w-full rounded">
+                  <div class="p-3 grid grid-cols-12 gap-4 items-start">
+                    <div class="col-span-7 bg-black rounded p-1 flex justify-center items-center">
+                      <img src="${photo.img}" class="report-card-img rounded">
                     </div>
-                    <div class="col-span-6 text-xs space-y-1.5">
-                      <p class="text-gray-600"><strong>Data/Hora do Registo:</strong> ${photo.timestamp}</p>
+                    <div class="col-span-5 text-xs space-y-2">
+                      <p class="text-gray-600"><strong>Data/Hora:</strong> ${photo.timestamp}</p>
                       <p class="text-gray-600"><strong>Localização:</strong> ${photo.location}</p>
-                      <div class="p-2.5 bg-gray-50 border border-gray-200 rounded text-gray-700 min-h-[90px]">
+                      <div class="p-3 bg-gray-50 border border-gray-200 rounded text-gray-700 min-h-[100px]">
                         <strong class="text-slate-800 block mb-1">Observações / Apontamentos:</strong>
                         <span class="whitespace-pre-wrap">${photo.notes}</span>
                       </div>
@@ -481,20 +481,6 @@
                   </div>
                 </div>
               `).join('')}
-            </div>
-          </div>
-
-          <!-- Assinaturas -->
-          <div class="mt-8 pt-6 border-t border-gray-300 grid grid-cols-2 gap-8 text-center text-xs">
-            <div>
-              <div class="border-b border-gray-400 pb-6"></div>
-              <p class="mt-1.5 font-bold">${inspector}</p>
-              <p class="text-gray-500">${sector}</p>
-            </div>
-            <div>
-              <div class="border-b border-gray-400 pb-6"></div>
-              <p class="mt-1.5 font-bold">Engenharia / Responsável pela Obra</p>
-              <p class="text-gray-500">Recebido / Ciente</p>
             </div>
           </div>
 
