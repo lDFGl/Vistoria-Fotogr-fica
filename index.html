@@ -146,10 +146,11 @@
       </h2>
 
       <div class="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl p-6 bg-gray-50 hover:bg-gray-100 transition cursor-pointer relative">
-        <input type="file" id="cameraInput" accept="image/*" capture="environment" onchange="processImage(event)"
+        <!-- Removido 'capture="environment"' para permitir selecionar arquivos locais do PC -->
+        <input type="file" id="cameraInput" accept="image/*" onchange="processImage(event)"
                class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
         <i data-lucide="aperture" class="w-10 h-10 text-gray-400 mb-2"></i>
-        <p class="text-xs font-semibold text-gray-700">Tirar Foto ou Selecionar da Galeria</p>
+        <p class="text-xs font-semibold text-gray-700">Carregar Foto do Computador ou Câmera</p>
         <p class="text-[10px] text-gray-500">A marca d'água com endereço, GPS e andar será aplicada automaticamente</p>
       </div>
 
@@ -210,8 +211,10 @@
         ESTADO GERAL
     ===================================================== */
     let currentAddressStr = "Balneário Camboriú - SC";
+    let currentLat = "-26.990000";
+    let currentLng = "-48.630000";
     let capturedPhotos = [];   // espelho do que está salvo no IndexedDB
-    let galleryUrls = [];      // object URLs da galeria (para liberar memória)
+    let galleryUrls = [];      // object URLs da galeria
     let pendingMeta = null;    // metadados da foto em preview
 
     const MAX_SIDE = 1600;
@@ -307,6 +310,18 @@
       saveForm();
     }
 
+    function showBusy(text) {
+      document.getElementById('busyText').innerText = text || 'Processando...';
+      document.getElementById('busyProgress').innerText = '';
+      document.getElementById('busyOverlay').classList.remove('hidden');
+    }
+    function setBusyProgress(text) {
+      document.getElementById('busyProgress').innerText = text;
+    }
+    function hideBusy() {
+      document.getElementById('busyOverlay').classList.add('hidden');
+    }
+
     /* =====================================================
         PERSISTÊNCIA DAS FOTOS (IndexedDB)
     ===================================================== */
@@ -376,7 +391,10 @@
     function saveForm() {
       try {
         const data = {};
-        FORM_FIELDS.forEach(id => { data[id] = document.getElementById(id).value; });
+        FORM_FIELDS.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) data[id] = el.value;
+        });
         localStorage.setItem(FORM_KEY, JSON.stringify(data));
       } catch (e) { /* armazenamento indisponível */ }
     }
@@ -385,12 +403,16 @@
       try {
         const data = JSON.parse(localStorage.getItem(FORM_KEY) || '{}');
         FORM_FIELDS.forEach(id => {
-          if (data[id] !== undefined && data[id] !== '') {
-            document.getElementById(id).value = data[id];
+          const el = document.getElementById(id);
+          if (el && data[id] !== undefined && data[id] !== '') {
+            el.value = data[id];
           }
         });
       } catch (e) { /* ignora */ }
-      document.getElementById('headerBuildingName').innerText = document.getElementById('buildingName').value;
+      const buildingEl = document.getElementById('buildingName');
+      if (buildingEl) {
+        document.getElementById('headerBuildingName').innerText = buildingEl.value;
+      }
       handleEnvironmentChange();
     }
 
@@ -663,26 +685,110 @@
     /* =====================================================
         GERAÇÃO DO PDF (jsPDF)
     ===================================================== */
-    const TEAL = [19, 92, 108];
-    const PAGE_W = 210, PAGE_H = 297, MARGIN = 8, GAP = 6, ROW_GAP = 4;
-    const CARD_W = (PAGE_W - MARGIN * 2 - GAP) / 2;
-    const CARD_H = 118;
-    const CARDS_TOP_FIRST = 44;
-    const CARDS_TOP_NEXT = 14;
-
-    function pdfSafe(str) {
-      return String(str == null ? '' : str)
-        .replace(/[\u2013\u2014]/g, '-')
-        .replace(/[\u2018\u2019]/g, "'")
-        .replace(/[\u201C\u201D]/g, '"')
-        .replace(/[^\n\u0020-\u00FF]/g, '');
+    function blobToBase64(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
     }
 
-    function fitText(doc, text, maxW) {
-      if (doc.getTextWidth(text) <= maxW) return text;
-      let t = text;
-      while (t.length > 1 && doc.getTextWidth(t + '...') > maxW) t = t.slice(0, -1);
-      return t + '...';
+    async function generatePDFReport() {
+      if (capturedPhotos.length === 0) {
+        alert('Adicione pelo menos uma foto antes de gerar o relatório em PDF.');
+        return;
+      }
+
+      showBusy('Gerando Relatório PDF...');
+
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+        const building = document.getElementById('buildingName').value || 'Empreendimento';
+        const inspector = document.getElementById('inspectorName').value || 'Auditor Técnico';
+        const sector = document.getElementById('inspectorSector').value || 'Auditoria Interna';
+
+        const pageW = 210;
+        const pageH = 297;
+        const margin = 10;
+        const cardW = (pageW - (margin * 2) - 6) / 2; // ~92mm cada card
+        const cardH = 118; // Altura de cada registro
+
+        let itemsPerPage = 4;
+        let col = 0;
+        let row = 0;
+        let startY = 42;
+
+        // Cabeçalho da Primeira Página
+        doc.setFillColor(19, 92, 108);
+        doc.rect(0, 0, pageW, 28, 'F');
+
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.text('RELATÓRIO & VISTORIA FOTOGRÁFICA', margin, 12);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.text(`Empreendimento: ${building}`, margin, 18);
+        doc.text(`Responsável: ${inspector} (${sector})`, margin, 24);
+
+        for (let i = 0; i < capturedPhotos.length; i++) {
+          if (i > 0 && i % itemsPerPage === 0) {
+            doc.addPage();
+            col = 0;
+            row = 0;
+            startY = 15;
+          }
+
+          setBusyProgress(`Processando foto ${i + 1} de ${capturedPhotos.length}...`);
+
+          const item = capturedPhotos[i];
+          const x = margin + col * (cardW + 6);
+          const y = startY + row * (cardH + 6);
+
+          // Card do item
+          doc.setDrawColor(220, 226, 230);
+          doc.setFillColor(250, 252, 253);
+          doc.roundedRect(x, y, cardW, cardH, 2, 2, 'FD');
+
+          // Converter imagem para Base64
+          const base64Img = await blobToBase64(item.blob);
+          doc.addImage(base64Img, 'JPEG', x + 2, y + 2, cardW - 4, 75);
+
+          // Textos e Apontamentos
+          doc.setTextColor(30, 41, 59);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(9);
+          doc.text(`Pavimento: ${item.floor}`, x + 4, y + 83);
+
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(19, 92, 108);
+          doc.text(`Ambiente: ${item.env}`, x + 4, y + 88);
+
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(100, 116, 139);
+          doc.setFontSize(8);
+          
+          const splitNotes = doc.splitTextToSize(`Obs: ${item.notes}`, cardW - 8);
+          doc.text(splitNotes.slice(0, 4), x + 4, y + 94);
+
+          col++;
+          if (col > 1) {
+            col = 0;
+            row++;
+          }
+        }
+
+        doc.save(`Relatorio_Vistoria_${building.replace(/\s+/g, '_')}.pdf`);
+      } catch (error) {
+        console.error(error);
+        alert('Ocorreu um erro ao gerar o PDF. Tente novamente.');
+      } finally {
+        hideBusy();
+      }
     }
   </script>
 </body>
