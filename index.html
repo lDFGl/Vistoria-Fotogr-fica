@@ -4,11 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Vistoria & Relatório Fotográfico - FG Empreendimentos</title>
-  
-  <!-- Tailwind CSS & Lucide Icons -->
+
+  <!-- Tailwind CSS, Lucide Icons e jsPDF -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
   <style>
     :root {
       --primary-fg: #135C6C;
@@ -23,10 +24,6 @@
       -webkit-user-select: auto;
       user-select: auto;
     }
-    @media print {
-      .no-print { display: none !important; }
-      .print-only { display: block !important; }
-    }
     .bg-fg { background-color: #135C6C; }
     .text-fg { color: #135C6C; }
     .border-fg { border-color: #135C6C; }
@@ -34,8 +31,16 @@
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans pb-24">
 
+  <!-- Overlay de processamento -->
+  <div id="busyOverlay" class="hidden fixed inset-0 z-[100] bg-black/60 flex items-center justify-center">
+    <div class="bg-white rounded-xl p-5 text-center text-sm shadow-xl mx-6">
+      <p id="busyText" class="font-semibold text-slate-800">Processando...</p>
+      <p id="busyProgress" class="text-xs text-gray-500 mt-1"></p>
+    </div>
+  </div>
+
   <!-- Header Fixo -->
-  <header class="sticky top-0 z-50 bg-[#135C6C] text-white shadow-md p-4 flex items-center justify-between no-print">
+  <header class="sticky top-0 z-50 bg-[#135C6C] text-white shadow-md p-4 flex items-center justify-between">
     <div class="flex items-center gap-3">
       <img src="logo-fg.png" alt="FG Logo" class="h-8 bg-white/10 p-1 rounded" onerror="this.style.display='none'">
       <div>
@@ -51,7 +56,7 @@
   <main class="max-w-xl mx-auto p-4 space-y-6">
 
     <!-- Card 1: Identificação da Vistoria -->
-    <section class="bg-white rounded-xl shadow-sm p-4 border border-gray-200 no-print">
+    <section class="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
       <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
         <i data-lucide="building" class="w-4 h-4 text-[#135C6C]"></i> Dados do Empreendimento e Vistoria
       </h2>
@@ -64,12 +69,12 @@
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Responsável / Auditor</label>
-            <input type="text" id="inspectorName" value="Auditor Técnico" 
+            <input type="text" id="inspectorName" value="Auditor Técnico"
                    class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#135C6C] focus:outline-none">
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Empresa / Setor</label>
-            <input type="text" id="inspectorSector" value="Auditoria Interna / Qualidade" 
+            <input type="text" id="inspectorSector" value="Auditoria Interna / Qualidade"
                    class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#135C6C] focus:outline-none">
           </div>
         </div>
@@ -77,7 +82,7 @@
     </section>
 
     <!-- Card 2: Geolocalização -->
-    <section class="bg-white rounded-xl shadow-sm p-4 border border-gray-200 no-print">
+    <section class="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
       <div class="flex justify-between items-center mb-2">
         <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
           <i data-lucide="map-pin" class="w-4 h-4 text-red-500"></i> Localização & GPS do Navegador
@@ -86,7 +91,7 @@
           <i data-lucide="refresh-cw" class="w-3 h-3"></i> Atualizar GPS
         </button>
       </div>
-      
+
       <div id="locationStatus" class="p-3 bg-slate-50 rounded-lg text-xs space-y-1 text-gray-600 border border-slate-200">
         <p id="geoAddress"><strong>Endereço Obra:</strong> Buscando localização do dispositivo...</p>
         <p id="geoCoordinates"><strong>GPS:</strong> Capturando coordenadas...</p>
@@ -94,11 +99,11 @@
     </section>
 
     <!-- Card 3: Seleção de Pavimento -->
-    <section class="bg-white rounded-xl shadow-sm p-4 border border-gray-200 no-print">
+    <section class="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
       <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
         <i data-lucide="layers" class="w-4 h-4 text-[#135C6C]"></i> Pavimento / Ambiente
       </h2>
-      
+
       <div class="space-y-3">
         <div>
           <label class="block text-xs font-medium text-gray-600 mb-1">Selecione o Pavimento</label>
@@ -113,20 +118,20 @@
 
         <div>
           <label class="block text-xs font-medium text-gray-600 mb-1">Ambiente / Cômodo Vistoriado</label>
-          <input type="text" id="environmentInput" placeholder="Ex: Geral, Shaft Principal, Cozinha, Sacada" 
+          <input type="text" id="environmentInput" placeholder="Ex: Geral, Shaft Principal, Cozinha, Sacada"
                  class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#135C6C] focus:outline-none">
         </div>
       </div>
     </section>
 
     <!-- Card 4: Captura de Foto -->
-    <section class="bg-white rounded-xl shadow-sm p-4 border border-gray-200 no-print">
+    <section class="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
       <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
         <i data-lucide="camera" class="w-4 h-4 text-[#135C6C]"></i> Capturar / Carregar Fotografia
       </h2>
 
       <div class="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl p-6 bg-gray-50 hover:bg-gray-100 transition cursor-pointer relative">
-        <input type="file" id="cameraInput" accept="image/*" capture="environment" onchange="processImage(event)" 
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" onchange="processImage(event)"
                class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
         <i data-lucide="aperture" class="w-10 h-10 text-gray-400 mb-2"></i>
         <p class="text-xs font-semibold text-gray-700">Tirar Foto ou Selecionar da Galeria</p>
@@ -138,29 +143,34 @@
         <p class="text-xs font-bold text-slate-700 flex items-center gap-1">
           <i data-lucide="eye" class="w-3.5 h-3.5 text-[#135C6C]"></i> Preview da Imagem com Marca D'água:
         </p>
-        
+
         <div class="relative rounded-lg overflow-hidden border border-gray-300 shadow-inner bg-black flex items-center justify-center p-1">
           <canvas id="photoCanvas" class="max-w-full h-auto max-h-[350px] block object-contain"></canvas>
         </div>
 
         <div>
           <label class="block text-xs font-semibold text-gray-700 mb-1">Observação / Apontamento para esta Foto:</label>
-          <textarea id="photoNotes" rows="3" placeholder="Descreva inconformidades, apontamentos ou o status vistoriado..." 
+          <textarea id="photoNotes" rows="3" placeholder="Descreva inconformidades, apontamentos ou o status vistoriado..."
                     class="w-full p-2.5 bg-white border border-gray-300 rounded-lg text-xs focus:ring-2 focus:ring-[#135C6C] focus:outline-none"></textarea>
         </div>
 
-        <button onclick="addPhotoToInspection()" class="w-full py-3 bg-[#135C6C] text-white font-bold rounded-lg text-xs hover:bg-[#0e4450] flex items-center justify-center gap-2 shadow">
+        <button id="addPhotoBtn" onclick="addPhotoToInspection()" class="w-full py-3 bg-[#135C6C] text-white font-bold rounded-lg text-xs hover:bg-[#0e4450] flex items-center justify-center gap-2 shadow">
           <i data-lucide="plus-circle" class="w-4 h-4"></i> Adicionar Foto ao Relatório
         </button>
       </div>
     </section>
 
     <!-- Galeria de Fotos Adicionadas -->
-    <section class="bg-white rounded-xl shadow-sm p-4 border border-gray-200 no-print">
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center justify-between">
-        <span class="flex items-center gap-2"><i data-lucide="image" class="w-4 h-4 text-slate-700"></i> Registos Fotografados</span>
-        <span id="photoCount" class="text-xs bg-[#135C6C] text-white px-2.5 py-0.5 rounded-full font-bold">0</span>
-      </h2>
+    <section class="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+          <i data-lucide="image" class="w-4 h-4 text-slate-700"></i> Registros Fotografados
+          <span id="photoCount" class="text-xs bg-[#135C6C] text-white px-2.5 py-0.5 rounded-full font-bold">0</span>
+        </h2>
+        <button onclick="clearAllPhotos()" class="text-[11px] text-red-600 font-semibold hover:underline flex items-center gap-1">
+          <i data-lucide="trash-2" class="w-3 h-3"></i> Limpar relatório
+        </button>
+      </div>
       <div id="gallery" class="grid grid-cols-2 gap-2">
         <p id="emptyGallery" class="col-span-2 text-xs text-gray-400 text-center py-4">Nenhuma foto adicionada ao relatório ainda.</p>
       </div>
@@ -169,22 +179,29 @@
   </main>
 
   <!-- Barra de Ações Inferior -->
-  <footer class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 flex justify-around items-center z-50 no-print">
+  <footer class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 flex justify-around items-center z-50">
     <button onclick="window.scrollTo({top:0, behavior:'smooth'})" class="flex flex-col items-center text-xs text-gray-600">
       <i data-lucide="arrow-up" class="w-5 h-5"></i> Topo
     </button>
     <button onclick="generatePDFReport()" class="px-6 py-3 bg-[#135C6C] text-white rounded-xl font-bold text-xs shadow-lg hover:bg-[#0e4450] flex items-center gap-2">
-      <i data-lucide="file-text" class="w-4 h-4 text-amber-300"></i> Visualizar / Imprimir PDF
+      <i data-lucide="file-text" class="w-4 h-4 text-amber-300"></i> Gerar PDF
     </button>
   </footer>
 
   <script>
     lucide.createIcons();
 
-    let currentLat = "-26.9926";
-    let currentLng = "-48.6351";
-    let currentAddressStr = "Rua 1500, Balneário Camboriú - SC";
-    let capturedPhotos = [];
+    /* =====================================================
+       ESTADO GERAL
+    ===================================================== */
+    let currentAddressStr = "Balneário Camboriú - SC";
+    let capturedPhotos = [];   // espelho do que está salvo no IndexedDB
+    let galleryUrls = [];      // object URLs da galeria (para liberar memória)
+    let pendingMeta = null;    // metadados da foto em preview (iguais aos da marca d'água)
+
+    // Lado maior da foto (px). Suficiente para a marca d'água legível e para o A4.
+    const MAX_SIDE = 1600;
+    const JPEG_QUALITY = 0.82;
 
     const floorsSchedule = [
       { id: "01", name: "01 TÉRREO", type: "Área Comum / Acesso", dates: "Conforme Cronograma Áreas Comuns" },
@@ -244,10 +261,131 @@
       { id: "55", name: "55 DUPLEX SUP. ROOFTOP", type: "Duplex Sup. Rooftop", dates: "Conforme Cronograma Rooftop" }
     ];
 
+    /* =====================================================
+       UTILITÁRIOS
+    ===================================================== */
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function showBusy(text) {
+      document.getElementById('busyText').innerText = text || 'Processando...';
+      document.getElementById('busyProgress').innerText = '';
+      document.getElementById('busyOverlay').classList.remove('hidden');
+    }
+    function setBusyProgress(text) {
+      document.getElementById('busyProgress').innerText = text;
+    }
+    function hideBusy() {
+      document.getElementById('busyOverlay').classList.add('hidden');
+    }
+    const nextFrame = () => new Promise(r => setTimeout(r, 0));
+
+    /* =====================================================
+       PERSISTÊNCIA DAS FOTOS (IndexedDB)
+    ===================================================== */
+    const DB_NAME = 'vistoria-fg-db';
+    const STORE = 'photos';
+    let dbPromise = null;
+
+    function openDB() {
+      if (dbPromise) return dbPromise;
+      dbPromise = new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = () => {
+          req.result.createObjectStore(STORE, { keyPath: 'id', autoIncrement: true });
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => { dbPromise = null; reject(req.error); };
+      });
+      return dbPromise;
+    }
+
+    async function savePhoto(photo) {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readwrite');
+        const req = tx.objectStore(STORE).add(photo);
+        tx.oncomplete = () => resolve(req.result);
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error || new Error('Transação abortada'));
+      });
+    }
+
+    async function loadPhotos() {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const req = db.transaction(STORE).objectStore(STORE).getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function deletePhotoFromDB(id) {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readwrite');
+        tx.objectStore(STORE).delete(id);
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    async function clearPhotosInDB() {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readwrite');
+        tx.objectStore(STORE).clear();
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    /* =====================================================
+       PERSISTÊNCIA DO FORMULÁRIO (localStorage - dados pequenos)
+    ===================================================== */
+    const FORM_KEY = 'vistoria-fg-form-v1';
+    const FORM_FIELDS = ['buildingName', 'inspectorName', 'inspectorSector', 'floorSelect', 'environmentInput'];
+
+    function saveForm() {
+      try {
+        const data = {};
+        FORM_FIELDS.forEach(id => { data[id] = document.getElementById(id).value; });
+        localStorage.setItem(FORM_KEY, JSON.stringify(data));
+      } catch (e) { /* armazenamento indisponível: ignora */ }
+    }
+
+    function restoreForm() {
+      try {
+        const data = JSON.parse(localStorage.getItem(FORM_KEY) || '{}');
+        FORM_FIELDS.forEach(id => {
+          if (data[id] !== undefined && data[id] !== '') {
+            document.getElementById(id).value = data[id];
+          }
+        });
+      } catch (e) { /* ignora */ }
+      document.getElementById('headerBuildingName').innerText = document.getElementById('buildingName').value;
+    }
+
+    function bindFormPersistence() {
+      FORM_FIELDS.forEach(id => {
+        const el = document.getElementById(id);
+        el.addEventListener('input', saveForm);
+        el.addEventListener('change', saveForm);
+      });
+    }
+
+    /* =====================================================
+       PAVIMENTOS
+    ===================================================== */
     function populateFloors() {
       const select = document.getElementById('floorSelect');
       select.innerHTML = floorsSchedule.map(item => `<option value="${item.name}">${item.name}</option>`).join('');
-      updateFloorInfo();
     }
 
     function updateFloorInfo() {
@@ -259,6 +397,9 @@
       }
     }
 
+    /* =====================================================
+       GEOLOCALIZAÇÃO
+    ===================================================== */
     function getLocation() {
       if ("geolocation" in navigator) {
         document.getElementById('geoCoordinates').innerHTML = `<strong>GPS:</strong> Capturando...`;
@@ -286,236 +427,519 @@
       }
     }
 
-    window.onload = () => {
+    /* =====================================================
+       INICIALIZAÇÃO
+    ===================================================== */
+    window.onload = async () => {
       populateFloors();
+      restoreForm();
+      updateFloorInfo();
+      bindFormPersistence();
       getLocation();
+
+      // Pede ao navegador para não apagar os dados automaticamente
+      if (navigator.storage && navigator.storage.persist) {
+        navigator.storage.persist().catch(() => {});
+      }
+
+      try {
+        capturedPhotos = await loadPhotos();
+      } catch (e) {
+        console.error(e);
+        alert('Não foi possível acessar o armazenamento local do navegador. As fotos não serão salvas após recarregar a página.');
+      }
+      renderGallery();
     };
 
+    /* =====================================================
+       CAPTURA DA FOTO (redimensiona + marca d'água)
+    ===================================================== */
     function processImage(event) {
       const file = event.target.files[0];
       if (!file) return;
 
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const img = new Image();
-        img.onload = function() {
-          const canvas = document.getElementById('photoCanvas');
-          const ctx = canvas.getContext('2d');
-
-          canvas.width = img.width;
-          canvas.height = img.height;
-          ctx.drawImage(img, 0, 0);
-
-          const building = document.getElementById('buildingName').value || 'SAPPHIRE TOWER';
-          const inspector = document.getElementById('inspectorName').value || 'AUDITOR TÉCNICO';
-          const floor = document.getElementById('floorSelect').value;
-          const env = document.getElementById('environmentInput').value || 'GERAL';
-          const now = new Date();
-          const dateStr = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR');
-
-          const fontSize = Math.max(16, Math.floor(canvas.width / 34));
-          const padding = fontSize * 0.8;
-          const lineHeight = fontSize * 1.35;
-
-          const lines = [
-            `${building.toUpperCase()} | PAV: ${floor}`,
-            `AMBIENTE: ${env.toUpperCase()} | AUDITOR: ${inspector.toUpperCase()}`,
-            `DATA: ${dateStr} | END: ${currentAddressStr}`,
-            `GPS: ${currentLat}, ${currentLng}`
-          ];
-
-          const boxHeight = (lines.length * lineHeight) + (padding * 1.8);
-
-          // Faixa de fundo da marca d'água
-          ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
-          ctx.fillRect(0, canvas.height - boxHeight, canvas.width, boxHeight);
-
-          // Linha decorativa
-          ctx.fillStyle = '#135C6C';
-          ctx.fillRect(0, canvas.height - boxHeight, canvas.width, 6);
-
-          ctx.fillStyle = '#ffffff';
-          ctx.font = `bold ${fontSize}px sans-serif`;
-
-          lines.forEach((line, index) => {
-            ctx.fillText(line, padding, canvas.height - boxHeight + padding + (index * lineHeight) + (fontSize * 0.75));
-          });
-
-          document.getElementById('previewContainer').classList.remove('hidden');
-        };
-        img.src = e.target.result;
+      const url = URL.createObjectURL(file);   // evita converter o arquivo inteiro em base64
+      const img = new Image();
+      img.onload = function () {
+        URL.revokeObjectURL(url);
+        drawWatermarkedImage(img);
       };
-      reader.readAsDataURL(file);
+      img.onerror = function () {
+        URL.revokeObjectURL(url);
+        alert('Não foi possível ler esta imagem. Tente novamente.');
+      };
+      img.src = url;
     }
 
-    function addPhotoToInspection() {
+    function drawWatermarkedImage(img) {
       const canvas = document.getElementById('photoCanvas');
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
-      const floor = document.getElementById('floorSelect').value;
-      const env = document.getElementById('environmentInput').value || 'Geral';
-      const notes = document.getElementById('photoNotes').value || 'Sem inconformidades anotadas.';
+      const ctx = canvas.getContext('2d');
 
-      capturedPhotos.push({
-        floor: floor,
-        env: env,
-        notes: notes,
-        img: dataUrl,
-        location: currentAddressStr,
-        timestamp: new Date().toLocaleString('pt-BR')
+      // Redimensiona para no máximo MAX_SIDE no lado maior
+      const srcW = img.naturalWidth || img.width;
+      const srcH = img.naturalHeight || img.height;
+      const scale = Math.min(1, MAX_SIDE / Math.max(srcW, srcH));
+      canvas.width = Math.round(srcW * scale);
+      canvas.height = Math.round(srcH * scale);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      const building = document.getElementById('buildingName').value || 'SAPPHIRE TOWER';
+      const inspector = document.getElementById('inspectorName').value || 'AUDITOR TÉCNICO';
+      const floor = document.getElementById('floorSelect').value;
+      const env = document.getElementById('environmentInput').value || 'GERAL';
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR');
+
+      const lines = [
+        `${building.toUpperCase()} | PAV: ${floor}`,
+        `AMBIENTE: ${env.toUpperCase()} | AUDITOR: ${inspector.toUpperCase()}`,
+        `DATA: ${dateStr} | END: ${currentAddressStr}`,
+        `GPS: ${currentLat}, ${currentLng}`
+      ];
+
+      // Ajusta a fonte para a linha mais longa caber na largura da foto
+      let fontSize = Math.max(12, Math.floor(canvas.width / 38));
+      const fits = () => {
+        ctx.font = `bold ${fontSize}px sans-serif`;
+        return lines.every(l => ctx.measureText(l).width <= canvas.width - fontSize * 1.6);
+      };
+      while (fontSize > 10 && !fits()) fontSize--;
+      ctx.font = `bold ${fontSize}px sans-serif`;
+
+      const padding = fontSize * 0.8;
+      const lineHeight = fontSize * 1.35;
+      const boxHeight = (lines.length * lineHeight) + (padding * 1.8);
+
+      // Faixa de fundo da marca d'água
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+      ctx.fillRect(0, canvas.height - boxHeight, canvas.width, boxHeight);
+
+      // Linha decorativa
+      ctx.fillStyle = '#135C6C';
+      ctx.fillRect(0, canvas.height - boxHeight, canvas.width, Math.max(3, fontSize * 0.15));
+
+      ctx.fillStyle = '#ffffff';
+      ctx.textBaseline = 'alphabetic';
+      lines.forEach((line, index) => {
+        ctx.fillText(line, padding, canvas.height - boxHeight + padding + (index * lineHeight) + (fontSize * 0.75));
       });
 
-      renderGallery();
-      document.getElementById('previewContainer').classList.add('hidden');
-      document.getElementById('cameraInput').value = '';
-      document.getElementById('photoNotes').value = '';
-      alert('✅ Foto e observação vinculadas ao relatório!');
+      // Guarda os mesmos dados que foram carimbados na imagem
+      pendingMeta = {
+        floor: floor,
+        env: document.getElementById('environmentInput').value || 'Geral',
+        location: currentAddressStr,
+        lat: currentLat,
+        lng: currentLng,
+        timestamp: now.toLocaleString('pt-BR'),
+        createdAt: now.getTime()
+      };
+
+      document.getElementById('previewContainer').classList.remove('hidden');
     }
 
+    function canvasToBlob(canvas) {
+      return new Promise((resolve, reject) => {
+        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Falha ao gerar a imagem')), 'image/jpeg', JPEG_QUALITY);
+      });
+    }
+
+    async function addPhotoToInspection() {
+      if (!pendingMeta) return;
+      const btn = document.getElementById('addPhotoBtn');
+      btn.disabled = true;
+
+      try {
+        const canvas = document.getElementById('photoCanvas');
+        const blob = await canvasToBlob(canvas);
+        const notes = document.getElementById('photoNotes').value || 'Sem inconformidades anotadas.';
+
+        await savePhoto({
+          floor: pendingMeta.floor,
+          env: pendingMeta.env,
+          notes: notes,
+          blob: blob,
+          location: pendingMeta.location,
+          lat: pendingMeta.lat,
+          lng: pendingMeta.lng,
+          timestamp: pendingMeta.timestamp,
+          createdAt: pendingMeta.createdAt
+        });
+
+        capturedPhotos = await loadPhotos();
+        renderGallery();
+
+        pendingMeta = null;
+        document.getElementById('previewContainer').classList.add('hidden');
+        document.getElementById('cameraInput').value = '';
+        document.getElementById('photoNotes').value = '';
+        alert('✅ Foto e observação salvas no relatório!');
+      } catch (e) {
+        console.error(e);
+        alert('Não foi possível salvar a foto. Verifique o espaço de armazenamento do aparelho e tente novamente.');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    /* =====================================================
+       GALERIA
+    ===================================================== */
     function renderGallery() {
       const gallery = document.getElementById('gallery');
       document.getElementById('photoCount').innerText = capturedPhotos.length;
+
+      galleryUrls.forEach(u => URL.revokeObjectURL(u));
+      galleryUrls = [];
 
       if (capturedPhotos.length === 0) {
         gallery.innerHTML = `<p id="emptyGallery" class="col-span-2 text-xs text-gray-400 text-center py-4">Nenhuma foto adicionada ao relatório ainda.</p>`;
         return;
       }
 
-      gallery.innerHTML = capturedPhotos.map((item, idx) => `
+      gallery.innerHTML = capturedPhotos.map(item => {
+        const url = URL.createObjectURL(item.blob);
+        galleryUrls.push(url);
+        return `
         <div class="relative rounded-lg overflow-hidden border border-gray-200 bg-gray-50 shadow-sm flex flex-col">
-          <img src="${item.img}" class="w-full h-32 object-cover">
+          <img src="${url}" class="w-full h-32 object-cover">
           <div class="p-2 text-[10px] space-y-1">
-            <p class="font-bold text-slate-800">${item.floor}</p>
-            <p class="text-[#135C6C] font-semibold truncate">Ambiente: ${item.env}</p>
-            <p class="text-gray-500 line-clamp-2">${item.notes}</p>
+            <p class="font-bold text-slate-800">${escapeHtml(item.floor)}</p>
+            <p class="text-[#135C6C] font-semibold truncate">Ambiente: ${escapeHtml(item.env)}</p>
+            <p class="text-gray-500 line-clamp-2">${escapeHtml(item.notes)}</p>
           </div>
-          <button onclick="removePhoto(${idx})" class="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 shadow hover:bg-red-700">
+          <button onclick="removePhoto(${item.id})" class="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 shadow hover:bg-red-700">
             <i data-lucide="x" class="w-3 h-3"></i>
           </button>
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
 
       lucide.createIcons();
     }
 
-    function removePhoto(index) {
-      capturedPhotos.splice(index, 1);
-      renderGallery();
+    async function removePhoto(id) {
+      if (!confirm('Remover esta foto do relatório?')) return;
+      try {
+        await deletePhotoFromDB(id);
+        capturedPhotos = capturedPhotos.filter(p => p.id !== id);
+        renderGallery();
+      } catch (e) {
+        console.error(e);
+        alert('Não foi possível remover a foto.');
+      }
     }
 
-    function generatePDFReport() {
+    async function clearAllPhotos() {
+      if (capturedPhotos.length === 0) return;
+      if (!confirm(`Apagar TODAS as ${capturedPhotos.length} fotos do relatório? Esta ação não pode ser desfeita.`)) return;
+      try {
+        await clearPhotosInDB();
+        capturedPhotos = [];
+        renderGallery();
+      } catch (e) {
+        console.error(e);
+        alert('Não foi possível limpar o relatório.');
+      }
+    }
+
+    /* =====================================================
+       GERAÇÃO DO PDF (jsPDF) - 4 fotos por página (2x2)
+    ===================================================== */
+    const TEAL = [19, 92, 108];
+    const PAGE_W = 210, PAGE_H = 297, MARGIN = 8, GAP = 6, ROW_GAP = 4;
+    const CARD_W = (PAGE_W - MARGIN * 2 - GAP) / 2;   // 94 mm
+    const CARD_H = 118;
+    const CARDS_TOP_FIRST = 44;   // 1ª página (com cabeçalho institucional)
+    const CARDS_TOP_NEXT = 14;    // demais páginas
+
+    // Fontes padrão do jsPDF não suportam todos os caracteres: normaliza o texto
+    function pdfSafe(str) {
+      return String(str == null ? '' : str)
+        .replace(/[\u2013\u2014]/g, '-')
+        .replace(/[\u2018\u2019]/g, "'")
+        .replace(/[\u201C\u201D]/g, '"')
+        .replace(/[^\n\u0020-\u00FF]/g, '');
+    }
+
+    function fitText(doc, text, maxW) {
+      if (doc.getTextWidth(text) <= maxW) return text;
+      let t = text;
+      while (t.length > 1 && doc.getTextWidth(t + '...') > maxW) t = t.slice(0, -1);
+      return t.trimEnd() + '...';
+    }
+
+    function blobToDataURL(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    function getImageSize(dataUrl) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
+        img.onerror = reject;
+        img.src = dataUrl;
+      });
+    }
+
+    // Tenta carregar o logo; se não existir (ou o canvas ficar "tainted"), segue sem logo
+    async function loadLogo() {
+      const candidates = ['logo-fg.png', 'logo-fg.png.png'];
+      for (const src of candidates) {
+        try {
+          const img = await new Promise((resolve, reject) => {
+            const i = new Image();
+            i.onload = () => resolve(i);
+            i.onerror = reject;
+            i.src = src;
+          });
+          const c = document.createElement('canvas');
+          c.width = img.naturalWidth;
+          c.height = img.naturalHeight;
+          c.getContext('2d').drawImage(img, 0, 0);
+          return { data: c.toDataURL('image/png'), w: img.naturalWidth, h: img.naturalHeight };
+        } catch (e) { /* tenta o próximo */ }
+      }
+      return null;
+    }
+
+    function drawFirstPageHeader(doc, info) {
+      const logoH = 15;
+      let logoW = 0;
+      if (info.logo) {
+        logoW = Math.min(40, logoH * (info.logo.w / info.logo.h));
+        doc.addImage(info.logo.data, 'PNG', PAGE_W - MARGIN - logoW, 7, logoW, logoW * (info.logo.h / info.logo.w));
+      }
+      const textMaxW = PAGE_W - MARGIN * 2 - logoW - 4;
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.setTextColor(15, 23, 42);
+      doc.text('RELATÓRIO FOTOGRÁFICO DE VISTORIA', MARGIN, 14);
+
+      doc.setFontSize(9);
+      doc.setTextColor(...TEAL);
+      doc.text(fitText(doc, pdfSafe('EMPREENDIMENTO: ' + info.building), textMaxW), MARGIN, 19.5);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(107, 114, 128);
+      doc.text(fitText(doc, pdfSafe(info.dateStr + ' - ' + info.address), textMaxW), MARGIN, 24);
+
+      doc.setDrawColor(...TEAL);
+      doc.setLineWidth(0.6);
+      doc.line(MARGIN, 27, PAGE_W - MARGIN, 27);
+
+      // Caixa de informações do auditor
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(226, 232, 240);
+      doc.setLineWidth(0.25);
+      doc.rect(MARGIN, 29, PAGE_W - MARGIN * 2, 7, 'FD');
+      doc.setFontSize(7.5);
+      const half = (PAGE_W - MARGIN * 2) / 2;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(107, 114, 128);
+      doc.text('Vistoriador / Auditor: ', MARGIN + 2, 33.6);
+      const w1 = doc.getTextWidth('Vistoriador / Auditor: ');
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(30, 41, 59);
+      doc.text(fitText(doc, pdfSafe(info.inspector), half - w1 - 4), MARGIN + 2 + w1, 33.6);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(107, 114, 128);
+      doc.text('Empresa / Setor: ', MARGIN + half + 2, 33.6);
+      const w2 = doc.getTextWidth('Empresa / Setor: ');
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(30, 41, 59);
+      doc.text(fitText(doc, pdfSafe(info.sector), half - w2 - 4), MARGIN + half + 2 + w2, 33.6);
+
+      // Título da seção
+      doc.setFontSize(9);
+      doc.setTextColor(...TEAL);
+      doc.text(`Registros e Evidências Fotográficas (${info.count})`, MARGIN, 41);
+      doc.setDrawColor(209, 213, 219);
+      doc.setLineWidth(0.25);
+      doc.line(MARGIN, 42.5, PAGE_W - MARGIN, 42.5);
+    }
+
+    function drawRunningHeader(doc, info) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(107, 114, 128);
+      doc.text(fitText(doc, pdfSafe('Relatório Fotográfico de Vistoria - ' + info.building), 140), MARGIN, 9);
+      doc.text(pdfSafe(info.dateStr), PAGE_W - MARGIN, 9, { align: 'right' });
+      doc.setDrawColor(209, 213, 219);
+      doc.setLineWidth(0.25);
+      doc.line(MARGIN, 10.5, PAGE_W - MARGIN, 10.5);
+    }
+
+    function drawLabelValue(doc, label, value, x, y, maxW, maxLines) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7);
+      doc.setTextColor(75, 85, 99);
+      doc.text(label, x, y);
+      const lw = doc.getTextWidth(label + ' ');
+      doc.setFont('helvetica', 'normal');
+      let lines = doc.splitTextToSize(pdfSafe(value), maxW - lw);
+      if (lines.length > maxLines) {
+        lines = lines.slice(0, maxLines);
+        lines[maxLines - 1] = fitText(doc, lines[maxLines - 1].trimEnd() + '...', maxW - lw);
+      }
+      lines.forEach((ln, i) => doc.text(ln, x + lw, y + i * 3.4));
+      return lines.length;
+    }
+
+    async function drawCard(doc, photo, number, x, y) {
+      const W = CARD_W, H = CARD_H;
+
+      // Moldura
+      doc.setDrawColor(203, 213, 225);
+      doc.setLineWidth(0.25);
+      doc.rect(x, y, W, H);
+
+      // Cabeçalho do card
+      doc.setFillColor(...TEAL);
+      doc.rect(x, y, W, 7, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(255, 255, 255);
+      const left = fitText(doc, pdfSafe(`#${number} - ${photo.floor}`), W * 0.55);
+      doc.text(left, x + 2, y + 4.7);
+      const leftW = doc.getTextWidth(left);
+
+      doc.setFontSize(7);
+      const envMax = W - 4 - leftW - 6;
+      const envText = fitText(doc, pdfSafe('Ambiente: ' + photo.env), Math.max(15, envMax - 3));
+      const envW = doc.getTextWidth(envText) + 3;
+      doc.setFillColor(255, 255, 255);
+      doc.roundedRect(x + W - 2 - envW, y + 1.4, envW, 4.2, 0.8, 0.8, 'F');
+      doc.setTextColor(...TEAL);
+      doc.text(envText, x + W - 2 - envW + 1.5, y + 4.5);
+
+      // Imagem (modo "contain": mantém a marca d'água inteira visível)
+      const boxX = x + 1.5, boxY = y + 8.5, boxW = W - 3, boxH = 66;
+      doc.setFillColor(0, 0, 0);
+      doc.rect(boxX, boxY, boxW, boxH, 'F');
+
+      const dataUrl = await blobToDataURL(photo.blob);
+      const size = await getImageSize(dataUrl);
+      const ratio = Math.min(boxW / size.w, boxH / size.h);
+      const dw = size.w * ratio, dh = size.h * ratio;
+      doc.addImage(dataUrl, 'JPEG', boxX + (boxW - dw) / 2, boxY + (boxH - dh) / 2, dw, dh, undefined, 'FAST');
+
+      // Metadados
+      drawLabelValue(doc, 'Data/Hora:', photo.timestamp, x + 2, y + 78.2, W - 4, 1);
+      drawLabelValue(doc, 'Localização:', photo.location, x + 2, y + 81.6, W - 4, 2);
+
+      // Observações
+      const obsY = y + 87.5;
+      const obsH = H - 87.5 - 1.5;
+      doc.setFillColor(249, 250, 251);
+      doc.setDrawColor(229, 231, 235);
+      doc.rect(x + 1.5, obsY, W - 3, obsH, 'FD');
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7);
+      doc.setTextColor(30, 41, 59);
+      doc.text('Observações / Apontamentos:', x + 3, obsY + 3.6);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(55, 65, 81);
+      const maxLines = Math.floor((obsH - 8.6) / 2.9);
+      let lines = doc.splitTextToSize(pdfSafe(photo.notes), W - 6);
+      if (lines.length > maxLines) {
+        lines = lines.slice(0, maxLines);
+        lines[maxLines - 1] = fitText(doc, lines[maxLines - 1].trimEnd() + '...', W - 6);
+      }
+      doc.text(lines, x + 3, obsY + 7.6);
+    }
+
+    async function generatePDFReport() {
       if (capturedPhotos.length === 0) {
         alert("Adicione pelo menos 1 foto ao relatório para gerar o documento.");
         return;
       }
+      if (!window.jspdf) {
+        alert('A biblioteca de PDF (jsPDF) não foi carregada. Verifique a conexão com a internet e recarregue a página.');
+        return;
+      }
 
-      const building = document.getElementById('buildingName').value || 'SAPPHIRE TOWER';
-      const inspector = document.getElementById('inspectorName').value || 'Auditor Técnico';
-      const sector = document.getElementById('inspectorSector').value || 'Auditoria Interna / Qualidade';
-      const dateStr = new Date().toLocaleString('pt-BR');
+      showBusy('Gerando PDF...');
+      await nextFrame();
 
-      const printWindow = window.open('', '_blank');
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html lang="pt-BR">
-        <head>
-          <meta charset="UTF-8">
-          <title>Relatório Fotográfico de Vistoria - ${building}</title>
-          <script src="https://cdn.tailwindcss.com"><\/script>
-          <style>
-            @page { 
-              size: A4 portrait; 
-              margin: 8mm 8mm 8mm 8mm; 
-            }
-            body { 
-              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-              background: white; 
-              color: #1e293b; 
-              margin: 0;
-              padding: 0;
-            }
-            .photo-card {
-              break-inside: avoid !important;
-              page-break-inside: avoid !important;
-            }
-            .report-card-img { 
-              width: 100%; 
-              height: 165px; 
-              object-fit: cover; 
-              display: block; 
-            }
-            .header-logo {
-              max-height: 64px !important;
-              width: auto;
-              object-fit: contain;
-            }
-          </style>
-        </head>
-        <body class="p-2">
-          
-          <!-- Cabeçalho Institucional FG -->
-          <div class="border-b-2 border-[#135C6C] pb-2 mb-3 flex justify-between items-center">
-            <div>
-              <h1 class="text-lg font-black text-slate-900 uppercase tracking-tight">RELATÓRIO FOTOGRÁFICO DE VISTORIA</h1>
-              <p class="text-xs font-bold text-[#135C6C]">EMPREENDIMENTO: ${building}</p>
-              <p class="text-[10px] text-gray-500 mt-0.5">${dateStr} — ${currentAddressStr}</p>
-            </div>
-            <div class="text-right flex items-center justify-end">
-              <img src="logo-fg.png" alt="FG Logo" class="header-logo h-16" onerror="this.src='logo-fg.png.png'">
-            </div>
-          </div>
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-          <!-- Informações do Auditor -->
-          <div class="bg-slate-50 border border-slate-200 rounded-md p-2 mb-3 grid grid-cols-2 gap-2 text-[11px]">
-            <div>
-              <span class="text-gray-500">Vistoriador / Auditor: </span>
-              <span class="font-bold text-slate-800">${inspector}</span>
-            </div>
-            <div>
-              <span class="text-gray-500">Empresa / Setor: </span>
-              <span class="font-bold text-slate-800">${sector}</span>
-            </div>
-          </div>
+        const info = {
+          building: document.getElementById('buildingName').value || 'SAPPHIRE TOWER',
+          inspector: document.getElementById('inspectorName').value || 'Auditor Técnico',
+          sector: document.getElementById('inspectorSector').value || 'Auditoria Interna / Qualidade',
+          dateStr: new Date().toLocaleString('pt-BR'),
+          address: currentAddressStr,
+          count: capturedPhotos.length,
+          logo: await loadLogo()
+        };
 
-          <!-- Lista de Fotos no Relatório - Grid 2x2 para 4 Fotos por Folha -->
-          <div class="space-y-2">
-            <h2 class="text-xs font-bold border-b border-gray-300 pb-1 text-[#135C6C]">
-              Registros e Evidências Fotográficas (${capturedPhotos.length})
-            </h2>
-            
-            <div class="grid grid-cols-2 gap-3">
-              ${capturedPhotos.map((photo, index) => `
-                <div class="photo-card border border-slate-300 rounded-md overflow-hidden bg-white shadow-sm flex flex-col justify-between">
-                  <div class="bg-[#135C6C] text-white px-2.5 py-1 flex justify-between items-center text-[11px]">
-                    <span class="font-bold truncate">#${index + 1} -${photo.floor}</span>
-                    <span class="bg-white text-[#135C6C] px-1.5 py-0.5 rounded font-bold text-[10px] shrink-0 ml-1">Ambiente: ${photo.env}</span>
-                  </div>
-                  
-                  <div class="p-1.5 space-y-1.5">
-                    <div class="bg-black rounded overflow-hidden flex justify-center items-center">
-                      <img src="${photo.img}" class="report-card-img rounded">
-                    </div>
-                    
-                    <div class="text-[10px] space-y-1">
-                      <p class="text-gray-600 leading-tight"><strong>Data/Hora:</strong> ${photo.timestamp}</p>
-                      <p class="text-gray-600 leading-tight truncate"><strong>Localização:</strong> ${photo.location}</p>
-                      <div class="p-1.5 bg-gray-50 border border-gray-200 rounded text-gray-700 min-h-[50px] max-h-[70px] overflow-hidden text-[10px]">
-                        <strong class="text-slate-800 block mb-0.5">Observações / Apontamentos:</strong>
-                        <span class="whitespace-pre-wrap leading-tight block">${photo.notes}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
+        // Ordena por pavimento (ordem do cronograma) e depois pela ordem de captura
+        const floorIndex = name => {
+          const i = floorsSchedule.findIndex(f => f.name === name);
+          return i === -1 ? 9999 : i;
+        };
+        const sorted = [...capturedPhotos].sort((a, b) =>
+          floorIndex(a.floor) - floorIndex(b.floor) || a.id - b.id
+        );
 
-          <script>
-            window.onload = function() { setTimeout(() => { window.print(); }, 300); }
-          <\/script>
-        </body>
-        </html>
-      `);
-      printWindow.document.close();
+        drawFirstPageHeader(doc, info);
+
+        for (let i = 0; i < sorted.length; i++) {
+          const perPage = 4;
+          const pageIdx = Math.floor(i / perPage);
+          const slot = i % perPage;
+
+          if (slot === 0 && i > 0) {
+            doc.addPage();
+            drawRunningHeader(doc, info);
+          }
+
+          const col = slot % 2;
+          const row = Math.floor(slot / 2);
+          const top = pageIdx === 0 ? CARDS_TOP_FIRST : CARDS_TOP_NEXT;
+          const x = MARGIN + col * (CARD_W + GAP);
+          const y = top + row * (CARD_H + ROW_GAP);
+
+          setBusyProgress(`Foto ${i + 1} de ${sorted.length}`);
+          await drawCard(doc, sorted[i], i + 1, x, y);
+          await nextFrame();   // mantém a tela responsiva e libera memória
+        }
+
+        // Rodapé com numeração de páginas
+        const total = doc.getNumberOfPages();
+        for (let p = 1; p <= total; p++) {
+          doc.setPage(p);
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(7);
+          doc.setTextColor(107, 114, 128);
+          doc.text(`Página ${p} de ${total}`, PAGE_W / 2, PAGE_H - 4, { align: 'center' });
+        }
+
+        const pad = n => String(n).padStart(2, '0');
+        const d = new Date();
+        const stamp = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
+        const slug = pdfSafe(info.building).normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40) || 'Vistoria';
+        doc.save(`Relatorio_Vistoria_${slug}_${stamp}.pdf`);
+      } catch (err) {
+        console.error(err);
+        alert('Erro ao gerar o PDF: ' + (err && err.message ? err.message : err));
+      } finally {
+        hideBusy();
+      }
     }
   </script>
 </body>
