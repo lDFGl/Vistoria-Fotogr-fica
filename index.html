@@ -2,456 +2,229 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Vistoria & Relatório Fotográfico - Sapphire Tower</title>
-  
-  <!-- Tailwind CSS & Lucide Icons -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relatório Fotográfico de Vistoria</title>
   <style>
+    :root {
+      --primary-color: #135C6C;
+    }
+
     body {
-      -webkit-touch-callout: none;
-      -webkit-user-select: none;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 20px;
+      color: #333;
     }
-    input, textarea, select {
-      -webkit-user-select: auto;
-      user-select: auto;
+
+    /* Cabeçalho do Relatório */
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid var(--primary-color);
+      padding-bottom: 12px;
+      margin-bottom: 20px;
     }
-    @media print {
-      .no-print { display: none !important; }
-      .print-only { display: block !important; }
+
+    .header-title {
+      font-size: 24px;
+      font-weight: bold;
+      color: #111;
+      text-transform: uppercase;
+      margin: 0 0 6px 0;
+    }
+
+    .header-subtitle {
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--primary-color);
+      margin: 4px 0;
+    }
+
+    .header-location {
+      font-size: 13px;
+      color: var(--primary-color);
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .logo-container img {
+      max-width: 140px;
+      height: auto;
+    }
+
+    /* Cartão do Auditor */
+    .auditor-card {
+      background-color: #f8f9fa;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      gap: 40px;
+      margin-bottom: 24px;
+    }
+
+    .auditor-card div p {
+      margin: 2px 0;
+    }
+
+    .auditor-card .label {
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .auditor-card .value {
+      font-weight: bold;
+      color: #1e293b;
+    }
+
+    /* Registo de Foto */
+    .section-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--primary-color);
+      margin-bottom: 12px;
+      border-bottom: 1px solid #cbd5e1;
+      padding-bottom: 6px;
+    }
+
+    .photo-card {
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .photo-card-header {
+      background-color: #0f172a;
+      color: #fff;
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .photo-card-header .ambiente {
+      color: var(--primary-color);
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .photo-card-body {
+      display: flex;
+      padding: 12px;
+      gap: 16px;
+    }
+
+    .photo-card-body img {
+      width: 280px;
+      height: 210px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+
+    .photo-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .photo-info p {
+      margin: 0;
+      font-size: 13px;
+    }
+
+    /* Caixa Expandida de Observações */
+    .obs-box {
+      background-color: #f8f9fa;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 12px;
+      min-height: 100px;
+      flex: 1;
+    }
+
+    .obs-box strong {
+      display: block;
+      margin-bottom: 6px;
+      color: #334155;
+    }
+
+    .obs-content {
+      font-size: 14px;
+      color: #1e293b;
+      white-space: pre-wrap;
     }
   </style>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans pb-24">
+<body>
 
-  <!-- Header Fixo -->
-  <header class="sticky top-0 z-50 bg-slate-900 text-white shadow-md p-4 flex items-center justify-between no-print">
+  <!-- Cabeçalho do Relatório -->
+  <div class="header-container">
     <div>
-      <h1 class="text-lg font-bold leading-tight">Relatório & Vistoria Fotográfica</h1>
-      <p class="text-xs text-amber-400 font-medium">Sapphire Tower — Sordi Movelaria & FG</p>
+      <h1 class="header-title">Relatório Fotográfico de Vistoria</h1>
+      <div class="header-subtitle" id="displayEmpreendimento">
+        EMPREENDIMENTO: SAPPHIRE TOWER – FG & SORDI MOVELARIA
+      </div>
+      <div class="header-location" id="displayHeaderMeta">
+        07/10/2026, 10:40:20 — Rua 1500, Balneário Camboriú - SC
+      </div>
     </div>
-    <span class="bg-emerald-600 text-white text-xs px-2.5 py-1 rounded-full font-semibold flex items-center gap-1">
-      <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Nativo
-    </span>
-  </header>
+    <div class="logo-container">
+      <img src="logo-fg.png" alt="FG Empreendimentos">
+    </div>
+  </div>
 
-  <main class="max-w-xl mx-auto p-4 space-y-6">
+  <!-- Dados do Auditor -->
+  <div class="auditor-card">
+    <div>
+      <p class="label">Vistoriador / Auditor:</p>
+      <p class="value">Auditor Técnico</p>
+    </div>
+    <div>
+      <p class="label">Empresa / Departamento:</p>
+      <p class="value">Auditoria Interna / Qualidade</p>
+    </div>
+  </div>
 
-    <!-- Card 1: Identificação da Vistoria -->
-    <section class="bg-white rounded-xl shadow-sm p-4 border border-gray-200 no-print">
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-        <i data-lucide="user" class="w-4 h-4 text-slate-700"></i> Dados da Vistoria
-      </h2>
-      <div class="space-y-3">
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Responsável / Auditor</label>
-          <input type="text" id="inspectorName" placeholder="Ex: Eng. Auditor / Vistoriador" 
-                 class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-800 focus:outline-none">
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Empresa / Setor</label>
-          <input type="text" id="inspectorSector" value="Auditoria Interna / Qualidade" 
-                 class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-800 focus:outline-none">
-        </div>
-      </div>
-    </section>
+  <!-- Registos Fotograficos -->
+  <div class="section-title">Registos e Evidências Fotográficas (1)</div>
 
-    <!-- Card 2: Geolocalização -->
-    <section class="bg-white rounded-xl shadow-sm p-4 border border-gray-200 no-print">
-      <div class="flex justify-between items-center mb-2">
-        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-          <i data-lucide="map-pin" class="w-4 h-4 text-red-500"></i> Localização & GPS
-        </h2>
-        <button onclick="getLocation()" class="text-xs text-blue-600 font-semibold hover:underline flex items-center gap-1">
-          <i data-lucide="refresh-cw" class="w-3 h-3"></i> Atualizar
-        </button>
-      </div>
-      
-      <div id="locationStatus" class="p-3 bg-slate-50 rounded-lg text-xs space-y-1 text-gray-600 border border-slate-200">
-        <p><strong>Empreendimento:</strong> Sapphire Tower (Av. Brasil, nº 270, BC)</p>
-        <p id="geoCoordinates"><strong>GPS:</strong> Capturando coordenadas...</p>
-        <p id="geoAddress"><strong>Endereço:</strong> Balneário Camboriú / SC</p>
-      </div>
-    </section>
+  <div class="photo-card">
+    <div class="photo-card-header">
+      <span>#1 - Pavimento: 01 TÉRREO</span>
+      <span class="ambiente">Ambiente: Geral</span>
+    </div>
+    <div class="photo-card-body">
+      <img src="exemplo-foto.jpg" alt="Foto da Vistoria">
+      <div class="photo-info">
+        <p><strong>Data/Hora do Registo:</strong> 07/10/2026, 10:40:15</p>
+        <p><strong>Localização:</strong> Rua 1500, Balneário Camboriú - SC</p>
 
-    <!-- Card 3: Seleção de Pavimento -->
-    <section class="bg-white rounded-xl shadow-sm p-4 border border-gray-200 no-print">
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-        <i data-lucide="layers" class="w-4 h-4 text-amber-600"></i> Pavimento / Andar (Cronograma Sordi)
-      </h2>
-      
-      <div class="space-y-3">
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Selecione o Pavimento</label>
-          <select id="floorSelect" onchange="updateFloorInfo()" class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none font-medium">
-          </select>
-        </div>
-
-        <div id="floorDetailCard" class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 space-y-1">
-          <p id="floorDetailType"><strong>Tipologia:</strong> -</p>
-          <p id="floorDetailDates"><strong>Previsão de Montagem (Shafts):</strong> -</p>
-        </div>
-
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Ambiente / Elemento Vistoriado</label>
-          <input type="text" id="environmentInput" placeholder="Ex: Shaft Principal, Cozinha, Sacada, Circulação" 
-                 class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+        <!-- Área Maior de Observações -->
+        <div class="obs-box">
+          <strong>Observações / Apontamentos:</strong>
+          <div class="obs-content">Verificação do estado geral do pavimento térreo. Apontamentos e notas detalhadas de auditoria técnica.</div>
         </div>
       </div>
-    </section>
-
-    <!-- Card 4: Captura de Foto -->
-    <section class="bg-white rounded-xl shadow-sm p-4 border border-gray-200 no-print">
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-        <i data-lucide="camera" class="w-4 h-4 text-emerald-600"></i> Capturar Fotografia
-      </h2>
-
-      <div class="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl p-6 bg-gray-50 hover:bg-gray-100 transition cursor-pointer relative">
-        <input type="file" id="cameraInput" accept="image/*" capture="environment" onchange="processImage(event)" 
-               class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
-        <i data-lucide="aperture" class="w-10 h-10 text-gray-400 mb-2"></i>
-        <p class="text-xs font-semibold text-gray-700">Tirar Foto ou Carregar da Galeria</p>
-        <p class="text-[10px] text-gray-500">A marca d'água será gerada com os dados do andar selecionado</p>
-      </div>
-
-      <!-- Preview -->
-      <div id="previewContainer" class="mt-4 hidden space-y-2">
-        <p class="text-xs font-medium text-gray-600">Preview com Stamp:</p>
-        <div class="relative rounded-lg overflow-hidden border border-gray-300 shadow-inner">
-          <canvas id="photoCanvas" class="w-full h-auto block"></canvas>
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Observação / Apontamento de Auditoria</label>
-          <textarea id="photoNotes" rows="2" placeholder="Descreva inconformidades, avarias ou status da montagem..." 
-                    class="w-full p-2 bg-gray-50 border border-gray-300 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
-        </div>
-        <button onclick="addPhotoToInspection()" class="w-full py-2.5 bg-emerald-600 text-white font-semibold rounded-lg text-xs hover:bg-emerald-700 flex items-center justify-center gap-1 shadow">
-          <i data-lucide="plus-circle" class="w-4 h-4"></i> Adicionar Foto ao Relatório
-        </button>
-      </div>
-    </section>
-
-    <!-- Galeria -->
-    <section class="bg-white rounded-xl shadow-sm p-4 border border-gray-200 no-print">
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center justify-between">
-        <span class="flex items-center gap-2"><i data-lucide="image" class="w-4 h-4 text-slate-700"></i> Fotos do Relatório</span>
-        <span id="photoCount" class="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full font-bold">0</span>
-      </h2>
-      <div id="gallery" class="grid grid-cols-2 gap-2">
-        <p id="emptyGallery" class="col-span-2 text-xs text-gray-400 text-center py-4">Nenhuma foto adicionada ao relatório ainda.</p>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- Barra de Ações -->
-  <footer class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 flex justify-around items-center z-50 no-print">
-    <button onclick="window.scrollTo({top:0, behavior:'smooth'})" class="flex flex-col items-center text-xs text-gray-600">
-      <i data-lucide="arrow-up" class="w-5 h-5"></i> Topo
-    </button>
-    <button onclick="generatePDFReport()" class="px-5 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-xs shadow-lg hover:bg-slate-800 flex items-center gap-2">
-      <i data-lucide="file-text" class="w-4 h-4 text-amber-400"></i> Gerar Relatório PDF
-    </button>
-  </footer>
+    </div>
+  </div>
 
   <script>
-    lucide.createIcons();
-
-    let currentLat = "-26.9926";
-    let currentLng = "-48.6351";
-    let capturedPhotos = [];
-
-    const floorsSchedule = [
-      { id: "01", name: "01 TÉRREO", type: "Área Comum / Garagem", dates: "Conforme Cronograma Áreas Comuns" },
-      { id: "02", name: "02 G1", type: "Garagens", dates: "18/11/26 a 19/11/26" },
-      { id: "03", name: "03 G2", type: "Garagens", dates: "18/11/26 a 19/11/26" },
-      { id: "04", name: "04 G3", type: "Garagens", dates: "16/11/26 a 17/11/26" },
-      { id: "05", name: "05 G4", type: "Garagens", dates: "16/11/26 a 17/11/26" },
-      { id: "06", name: "06 G5", type: "Garagens", dates: "16/11/26 a 17/11/26" },
-      { id: "07", name: "07 LAZER 1", type: "Lazer Áreas Comuns", dates: "Conforme Cronograma Áreas Comuns" },
-      { id: "08", name: "08 LAZER 2", type: "Lazer Áreas Comuns", dates: "Conforme Cronograma Áreas Comuns" },
-      { id: "09", name: "09 DIF. 1", type: "Diferenciado 1", dates: "16/11/26 a 18/11/26" },
-      { id: "10", name: "10 DIF. 2", type: "Diferenciado 2", dates: "11/11/26 a 13/11/26" },
-      { id: "11", name: "11 TIPO A", type: "Tipo A", dates: "Executado por Modelare" },
-      { id: "12", name: "12 TIPO A", type: "Tipo A", dates: "19/08/26 a 21/08/26" },
-      { id: "13", name: "13 TIPO A", type: "Tipo A", dates: "14/09/26 a 22/09/26" },
-      { id: "14", name: "14 TIPO A", type: "Tipo A", dates: "14/09/26 a 22/09/26" },
-      { id: "15", name: "15 TIPO A", type: "Tipo A", dates: "22/09/26 a 23/09/26" },
-      { id: "16", name: "16 TIPO A", type: "Tipo A", dates: "22/09/26 a 23/09/26" },
-      { id: "17", name: "17 TIPO A", type: "Tipo A", dates: "23/09/26 a 25/09/26" },
-      { id: "18", name: "18 TIPO A", type: "Tipo A", dates: "23/09/26 a 25/09/26" },
-      { id: "19", name: "19 TIPO A", type: "Tipo A", dates: "24/09/26 a 25/09/26" },
-      { id: "20", name: "20 TIPO B", type: "Tipo B", dates: "25/09/26 a 28/09/26" },
-      { id: "21", name: "21 TIPO B", type: "Tipo B", dates: "25/09/26 a 28/09/26" },
-      { id: "22", name: "22 TIPO B", type: "Tipo B", dates: "25/09/26 a 28/09/26" },
-      { id: "23", name: "23 TIPO B", type: "Tipo B", dates: "29/09/26 a 30/09/26" },
-      { id: "24", name: "24 TIPO B", type: "Tipo B", dates: "29/09/26 a 30/09/26" },
-      { id: "25", name: "25 TIPO B", type: "Tipo B", dates: "29/09/26 a 30/09/26" },
-      { id: "26", name: "26 TIPO B", type: "Tipo B", dates: "30/09/26 a 02/10/26" },
-      { id: "27", name: "27 TIPO B", type: "Tipo B", dates: "30/09/26 a 02/10/26" },
-      { id: "28", name: "28 TIPO B", type: "Tipo B", dates: "30/09/26 a 02/10/26" },
-      { id: "29", name: "29 TIPO B", type: "Tipo B", dates: "07/10/26 a 09/10/26" },
-      { id: "30", name: "30 TIPO C", type: "Tipo C", dates: "07/10/26 a 09/10/26" },
-      { id: "31", name: "31 TIPO C", type: "Tipo C", dates: "07/10/26 a 09/10/26" },
-      { id: "32", name: "32 TIPO C", type: "Tipo C", dates: "13/10/26 a 15/10/26" },
-      { id: "33", name: "33 TIPO C", type: "Tipo C", dates: "13/10/26 a 15/10/26" },
-      { id: "34", name: "34 TIPO C", type: "Tipo C", dates: "16/10/26 a 20/10/26" },
-      { id: "35", name: "35 TIPO C", type: "Tipo C", dates: "16/10/26 a 20/10/26" },
-      { id: "36", name: "36 TIPO C", type: "Tipo C", dates: "21/10/26 a 23/10/26" },
-      { id: "37", name: "37 TIPO C", type: "Tipo C", dates: "21/10/26 a 23/10/26" },
-      { id: "38", name: "38 TIPO C", type: "Tipo C", dates: "26/10/26 a 28/10/26" },
-      { id: "39", name: "39 TIPO C", type: "Tipo C", dates: "26/10/26 a 28/10/26" },
-      { id: "40", name: "40 TIPO C", type: "Tipo C", dates: "26/10/26 a 28/10/26" },
-      { id: "41", name: "41 TIPO C", type: "Tipo C", dates: "28/10/26 a 30/10/26" },
-      { id: "42", name: "42 TIPO C", type: "Tipo C", dates: "28/10/26 a 30/10/26" },
-      { id: "43", name: "43 TIPO C", type: "Tipo C", dates: "28/10/26 a 30/10/26" },
-      { id: "44", name: "44 TIPO C", type: "Tipo C", dates: "03/11/26 a 05/11/26" },
-      { id: "45", name: "45 TIPO C", type: "Tipo C", dates: "03/11/26 a 05/11/26" },
-      { id: "46", name: "46 TIPO C", type: "Tipo C", dates: "03/11/26 a 05/11/26" },
-      { id: "47", name: "47 TIPO C", type: "Tipo C", dates: "03/11/26 a 05/11/26" },
-      { id: "48", name: "48 TIPO C", type: "Tipo C", dates: "06/11/26 a 10/11/26" },
-      { id: "49", name: "49 TIPO C", type: "Tipo C", dates: "06/11/26 a 10/11/26" },
-      { id: "50", name: "50 MASTER", type: "Master", dates: "06/11/26 a 10/11/26" },
-      { id: "51", name: "51 MASTER", type: "Master", dates: "06/11/26 a 10/11/26" },
-      { id: "52", name: "52 MASTER", type: "Master", dates: "11/11/26 a 13/11/26" },
-      { id: "53", name: "53 MASTER", type: "Master", dates: "11/11/26 a 13/11/26" },
-      { id: "54", name: "54 DUPLEX INF. + TIPO", type: "Duplex Inf. + Tipo", dates: "11/11/26 a 13/11/26" },
-      { id: "55", name: "55 DUPLEX SUP. ROOFTOP", type: "Duplex Sup. Rooftop", dates: "Conforme Cronograma Rooftop" }
-    ];
-
-    function populateFloors() {
-      const select = document.getElementById('floorSelect');
-      select.innerHTML = floorsSchedule.map(item => `<option value="${item.name}">${item.name}</option>`).join('');
-      updateFloorInfo();
-    }
-
-    function updateFloorInfo() {
-      const selectedName = document.getElementById('floorSelect').value;
-      const floor = floorsSchedule.find(f => f.name === selectedName);
-      if (floor) {
-        document.getElementById('floorDetailType').innerHTML = `<strong>Tipologia:</strong> ${floor.type}`;
-        document.getElementById('floorDetailDates').innerHTML = `<strong>Previsão de Montagem (Shafts):</strong> ${floor.dates}`;
+    // Função para atualizar Rua e Cidade através de Lat/Lng (Geocoding API / Nominatim)
+    async function obterRuaECidade(lat, lon) {
+      try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+        const data = await response.json();
+        const rua = data.address.road || data.address.pedestrian || "Rua não identificada";
+        const cidade = data.address.city || data.address.town || data.address.municipality || "Cidade não identificada";
+        const uf = data.address.state_code || "";
+        return `${rua}, ${cidade}${uf ? ' - ' + uf : ''}`;
+      } catch (e) {
+        return `${lat}, ${lon}`;
       }
-    }
-
-    function getLocation() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((pos) => {
-          currentLat = pos.coords.latitude.toFixed(6);
-          currentLng = pos.coords.longitude.toFixed(6);
-          document.getElementById('geoCoordinates').innerHTML = `<strong>GPS:</strong> ${currentLat}, ${currentLng}`;
-        }, () => {
-          document.getElementById('geoCoordinates').innerHTML = `<strong>GPS:</strong> ${currentLat}, ${currentLng} (Padrão Obra)`;
-        });
-      }
-    }
-
-    window.onload = () => {
-      populateFloors();
-      getLocation();
-    };
-
-    function processImage(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const img = new Image();
-        img.onload = function() {
-          const canvas = document.getElementById('photoCanvas');
-          const ctx = canvas.getContext('2d');
-
-          canvas.width = img.width;
-          canvas.height = img.height;
-          ctx.drawImage(img, 0, 0);
-
-          const inspector = document.getElementById('inspectorName').value || 'AUDITOR NÃO IDENTIFICADO';
-          const floor = document.getElementById('floorSelect').value;
-          const env = document.getElementById('environmentInput').value || 'GERAL';
-          const now = new Date();
-          const dateStr = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR');
-
-          const fontSize = Math.max(16, Math.floor(canvas.width / 35));
-          const padding = fontSize * 0.8;
-          const lineHeight = fontSize * 1.3;
-
-          const lines = [
-            `SAPPHIRE TOWER | PAVIMENTO: ${floor}`,
-            `AMBIENTE: ${env.toUpperCase()}`,
-            `VISTORIADOR: ${inspector.toUpperCase()}`,
-            `DATA: ${dateStr} | LAT/LNG: ${currentLat}, ${currentLng}`
-          ];
-
-          const boxHeight = (lines.length * lineHeight) + (padding * 2);
-
-          ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
-          ctx.fillRect(0, canvas.height - boxHeight, canvas.width, boxHeight);
-
-          ctx.fillStyle = '#f59e0b';
-          ctx.fillRect(0, canvas.height - boxHeight, canvas.width, 4);
-
-          ctx.fillStyle = '#ffffff';
-          ctx.font = `bold ${fontSize}px sans-serif`;
-
-          lines.forEach((line, index) => {
-            ctx.fillText(line, padding, canvas.height - boxHeight + padding + (index * lineHeight) + (fontSize * 0.8));
-          });
-
-          document.getElementById('previewContainer').classList.remove('hidden');
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function addPhotoToInspection() {
-      const canvas = document.getElementById('photoCanvas');
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-      const floor = document.getElementById('floorSelect').value;
-      const env = document.getElementById('environmentInput').value || 'Geral';
-      const notes = document.getElementById('photoNotes').value || 'Sem inconformidades anotadas.';
-
-      capturedPhotos.push({
-        floor: floor,
-        env: env,
-        notes: notes,
-        img: dataUrl,
-        timestamp: new Date().toLocaleString('pt-BR')
-      });
-
-      renderGallery();
-      document.getElementById('previewContainer').classList.add('hidden');
-      document.getElementById('cameraInput').value = '';
-      document.getElementById('photoNotes').value = '';
-    }
-
-    function renderGallery() {
-      const gallery = document.getElementById('gallery');
-      document.getElementById('photoCount').innerText = capturedPhotos.length;
-
-      if (capturedPhotos.length === 0) {
-        gallery.innerHTML = `<p id="emptyGallery" class="col-span-2 text-xs text-gray-400 text-center py-4">Nenhuma foto adicionada ao relatório ainda.</p>`;
-        return;
-      }
-
-      gallery.innerHTML = capturedPhotos.map((item, idx) => `
-        <div class="relative rounded-lg overflow-hidden border border-gray-200 bg-gray-50 shadow-sm flex flex-col">
-          <img src="${item.img}" class="w-full h-28 object-cover">
-          <div class="p-2 text-[10px] space-y-1">
-            <p class="font-bold text-slate-800">${item.floor}</p>
-            <p class="text-gray-600 truncate">${item.env}</p>
-          </div>
-          <button onclick="removePhoto(${idx})" class="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 shadow">
-            <i data-lucide="x" class="w-3 h-3"></i>
-          </button>
-        </div>
-      `).join('');
-
-      lucide.createIcons();
-    }
-
-    function removePhoto(index) {
-      capturedPhotos.splice(index, 1);
-      renderGallery();
-    }
-
-    function generatePDFReport() {
-      if (capturedPhotos.length === 0) {
-        alert("Adicione pelo menos 1 foto para gerar o relatório fotográfico.");
-        return;
-      }
-
-      const inspector = document.getElementById('inspectorName').value || 'Auditor Técnico';
-      const sector = document.getElementById('inspectorSector').value || 'Auditoria Interna';
-      const dateStr = new Date().toLocaleString('pt-BR');
-
-      const printWindow = window.open('', '_blank');
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html lang="pt-BR">
-        <head>
-          <meta charset="UTF-8">
-          <title>Relatório Fotográfico de Vistoria - Sapphire Tower</title>
-          <script src="https://cdn.tailwindcss.com"><\/script>
-          <style>
-            @page { size: A4; margin: 12mm; }
-            body { font-family: sans-serif; background: white; color: #1e293b; }
-          </style>
-        </head>
-        <body class="p-6">
-          <div class="border-b-2 border-slate-900 pb-4 mb-6 flex justify-between items-end">
-            <div>
-              <h1 class="text-2xl font-black text-slate-900 uppercase">Relatório Fotográfico de Vistoria</h1>
-              <p class="text-sm font-semibold text-amber-600">EMPREENDIMENTO: SAPPHIRE TOWER — FG & SORDI MOVELARIA</p>
-            </div>
-            <div class="text-right text-xs text-gray-500">
-              <p>Data emissão: ${dateStr}</p>
-              <p>GPS: ${currentLat}, ${currentLng}</p>
-            </div>
-          </div>
-
-          <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6 grid grid-cols-2 gap-4 text-xs">
-            <div>
-              <p class="text-gray-500">Vistoriador / Auditor:</p>
-              <p class="font-bold text-slate-800 text-sm">${inspector}</p>
-            </div>
-            <div>
-              <p class="text-gray-500">Empresa / Departamento:</p>
-              <p class="font-bold text-slate-800 text-sm">${sector}</p>
-            </div>
-          </div>
-
-          <div class="space-y-6">
-            <h2 class="text-base font-bold border-b border-gray-300 pb-1 text-slate-800">Registros e Evidências Fotográficas (${capturedPhotos.length})</h2>
-            
-            <div class="grid grid-cols-1 gap-6">
-              ${capturedPhotos.map((photo, index) => `
-                <div class="border border-slate-300 rounded-lg overflow-hidden break-inside-avoid bg-white">
-                  <div class="bg-slate-900 text-white p-2.5 flex justify-between items-center text-xs">
-                    <span class="font-bold">#${index + 1} - Pavimento:${photo.floor}</span>
-                    <span class="text-amber-400">Ambiente: ${photo.env}</span>
-                  </div>
-                  <div class="p-3 grid grid-cols-2 gap-4 items-center">
-                    <img src="${photo.img}" class="w-full rounded border border-gray-200 shadow-sm">
-                    <div class="text-xs space-y-2">
-                      <p><strong>Data/Hora do Registro:</strong> ${photo.timestamp}</p>
-                      <p><strong>Localização GPS:</strong> ${currentLat},${currentLng}</p>
-                      <div class="p-2.5 bg-gray-50 border border-gray-200 rounded text-gray-700">
-                        <strong>Observações / Apontamentos:</strong><br>
-                        ${photo.notes}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-
-          <div class="mt-12 pt-8 border-t border-gray-300 grid grid-cols-2 gap-12 text-center text-xs">
-            <div>
-              <div class="border-b border-gray-400 pb-8"></div>
-              <p class="mt-2 font-bold">${inspector}</p>
-              <p class="text-gray-500">Auditor Interno / Vistoriador</p>
-            </div>
-            <div>
-              <div class="border-b border-gray-400 pb-8"></div>
-              <p class="mt-2 font-bold">Engenharia / Gestão da Obra</p>
-              <p class="text-gray-500">Recebido / Ciente</p>
-            </div>
-          </div>
-
-          <script>
-            window.onload = function() { window.print(); }
-          <\/script>
-        </body>
-        </html>
-      `);
-      printWindow.document.close();
     }
   </script>
 </body>
