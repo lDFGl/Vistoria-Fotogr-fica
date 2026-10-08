@@ -2,9 +2,10 @@
   "name": "sapphire-vistoria-app",
   "version": "1.0.0",
   "description": "Aplicativo de Vistoria Fotográfica e Relatórios em PDF - Torre Sapphire",
-  "main": "index.html",
+  "main": "www/index.html",
   "scripts": {
     "start": "npx serve www",
+    "dev": "npx serve www -l 3000",
     "build": "echo 'Sem etapa de build necessária'",
     "cap:sync": "cap sync"
   },
