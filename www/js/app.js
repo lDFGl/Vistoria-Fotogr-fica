@@ -43,16 +43,9 @@ function hideBusy() {
 
 function saveForm() {
   try {
-    const fields = [
-      'buildingName',
-      'inspectorName',
-      'inspectorSector',
-      'floorSelect',
-      'environmentSelect',
-      'environmentCustomInput'
-    ];
-
+    const fields = ['buildingName', 'inspectorName', 'inspectorSector', 'floorSelect', 'environmentSelect', 'environmentCustomInput'];
     const data = {};
+
     fields.forEach((id) => {
       const el = document.getElementById(id);
       if (el) data[id] = el.value;
@@ -80,9 +73,9 @@ function restoreForm() {
   }
 
   const buildingEl = document.getElementById('buildingName');
-  if (buildingEl) {
-    const header = document.getElementById('headerBuildingName');
-    if (header) header.textContent = buildingEl.value || 'Sapphire Tower';
+  const header = document.getElementById('headerBuildingName');
+  if (buildingEl && header) {
+    header.textContent = buildingEl.value || 'Sapphire Tower';
   }
 
   handleEnvironmentChange();
@@ -130,16 +123,21 @@ function handleEnvironmentChange() {
 
 function getLocation() {
   if (!('geolocation' in navigator)) {
-    document.getElementById('geoCoordinates').innerHTML = '<strong>GPS:</strong> Geolocalização indisponível';
+    const geoCoordinates = document.getElementById('geoCoordinates');
+    if (geoCoordinates) geoCoordinates.innerHTML = '<strong>GPS:</strong> Geolocalização indisponível';
     return;
   }
 
-  document.getElementById('geoCoordinates').innerHTML = '<strong>GPS:</strong> Capturando...';
+  const geoCoordinates = document.getElementById('geoCoordinates');
+  if (geoCoordinates) geoCoordinates.innerHTML = '<strong>GPS:</strong> Capturando...';
 
   navigator.geolocation.getCurrentPosition(async (pos) => {
     state.currentLat = pos.coords.latitude.toFixed(6);
     state.currentLng = pos.coords.longitude.toFixed(6);
-    document.getElementById('geoCoordinates').innerHTML = `<strong>GPS:</strong> ${state.currentLat}, ${state.currentLng}`;
+
+    if (geoCoordinates) {
+      geoCoordinates.innerHTML = `<strong>GPS:</strong> ${state.currentLat}, ${state.currentLng}`;
+    }
 
     try {
       const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${state.currentLat}&lon=${state.currentLng}`);
@@ -148,14 +146,21 @@ function getLocation() {
       const cidade = data.address?.city || data.address?.town || 'Balneário Camboriú';
       const uf = data.address?.state_code || 'SC';
       state.currentAddressStr = `${rua}, ${cidade} - ${uf}`;
-      document.getElementById('geoAddress').innerHTML = `<strong>Endereço:</strong> ${state.currentAddressStr}`;
+
+      const geoAddress = document.getElementById('geoAddress');
+      if (geoAddress) geoAddress.innerHTML = `<strong>Endereço:</strong> ${state.currentAddressStr}`;
     } catch (error) {
       state.currentAddressStr = 'Balneário Camboriú - SC';
-      document.getElementById('geoAddress').innerHTML = `<strong>Endereço:</strong> ${state.currentAddressStr}`;
+      const geoAddress = document.getElementById('geoAddress');
+      if (geoAddress) geoAddress.innerHTML = `<strong>Endereço:</strong> ${state.currentAddressStr}`;
     }
   }, () => {
-    document.getElementById('geoCoordinates').innerHTML = `<strong>GPS:</strong> ${state.currentLat}, ${state.currentLng} (Aproximado)`;
-    document.getElementById('geoAddress').innerHTML = `<strong>Endereço:</strong> ${state.currentAddressStr}`;
+    if (geoCoordinates) {
+      geoCoordinates.innerHTML = `<strong>GPS:</strong> ${state.currentLat}, ${state.currentLng} (Aproximado)`;
+    }
+
+    const geoAddress = document.getElementById('geoAddress');
+    if (geoAddress) geoAddress.innerHTML = `<strong>Endereço:</strong> ${state.currentAddressStr}`;
   }, { enableHighAccuracy: true, timeout: 8000 });
 }
 
@@ -181,7 +186,10 @@ function processImage(event) {
 
 function drawWatermarkedImage(image) {
   const canvas = document.getElementById('photoCanvas');
+  if (!canvas) return;
+
   const ctx = canvas.getContext('2d');
+  if (!ctx) return;
 
   const srcWidth = image.naturalWidth || image.width;
   const srcHeight = image.naturalHeight || image.height;
@@ -242,7 +250,8 @@ function drawWatermarkedImage(image) {
     createdAt: now.getTime()
   };
 
-  document.getElementById('previewContainer').classList.remove('hidden');
+  const preview = document.getElementById('previewContainer');
+  if (preview) preview.classList.remove('hidden');
 }
 
 function canvasToBlob(canvas) {
@@ -284,9 +293,13 @@ async function addPhotoToInspection() {
     renderGallery();
 
     state.pendingMeta = null;
-    document.getElementById('previewContainer').classList.add('hidden');
-    document.getElementById('cameraInput').value = '';
-    document.getElementById('photoNotes').value = '';
+    const preview = document.getElementById('previewContainer');
+    if (preview) preview.classList.add('hidden');
+    const cameraInput = document.getElementById('cameraInput');
+    if (cameraInput) cameraInput.value = '';
+    const photoNotes = document.getElementById('photoNotes');
+    if (photoNotes) photoNotes.value = '';
+
     alert('✅ Foto e observação salvas no relatório!');
   } catch (error) {
     console.error(error);
@@ -304,6 +317,8 @@ function renderGallery() {
 
   state.galleryUrls.forEach((url) => URL.revokeObjectURL(url));
   state.galleryUrls = [];
+
+  if (!gallery) return;
 
   if (state.capturedPhotos.length === 0) {
     gallery.innerHTML = '<p id="emptyGallery" class="col-span-2 text-xs text-gray-400 text-center py-4">Nenhuma foto adicionada ao relatório ainda.</p>';
@@ -360,6 +375,40 @@ async function clearAllPhotos() {
     console.error(error);
     alert('Não foi possível limpar o relatório.');
   }
+}
+
+function exportReportJson() {
+  if (state.capturedPhotos.length === 0) {
+    alert('Adicione pelo menos uma foto antes de exportar o relatório em JSON.');
+    return;
+  }
+
+  const building = document.getElementById('buildingName').value || 'Empreendimento';
+  const payload = {
+    empreendimento: building,
+    auditor: document.getElementById('inspectorName').value || 'Auditor Técnico',
+    setor: document.getElementById('inspectorSector').value || 'Auditoria Interna',
+    data: new Date().toISOString(),
+    fotos: state.capturedPhotos.map((item) => ({
+      id: item.id,
+      floor: item.floor,
+      env: item.env,
+      notes: item.notes,
+      location: item.location,
+      lat: item.lat,
+      lng: item.lng,
+      timestamp: item.timestamp
+    }))
+  };
+
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `Relatorio_Vistoria_${building.replace(/\s+/g, '_')}.json`;
+  anchor.click();
+
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function blobToBase64(blob) {
@@ -444,7 +493,7 @@ async function generatePDFReport() {
       doc.setTextColor(100, 116, 139);
       doc.setFontSize(8);
 
-      const splitNotes = doc.splitTextToSize(`Obs: ${item.notes}`, cardWidth - 8);
+      const splitNotes = doc.splitTextToSize(`Obs: ${item.notes || 'Sem observações.'}`, cardWidth - 8);
       doc.text(splitNotes.slice(0, 4), x + 4, y + 94);
 
       col += 1;
@@ -464,7 +513,9 @@ async function generatePDFReport() {
 }
 
 async function initApp() {
-  lucide.createIcons();
+  if (window.lucide && typeof window.lucide.createIcons === 'function') {
+    window.lucide.createIcons();
+  }
 
   try {
     state.floors = await loadFloors();
@@ -499,6 +550,7 @@ window.processImage = processImage;
 window.addPhotoToInspection = addPhotoToInspection;
 window.removePhoto = removePhoto;
 window.clearAllPhotos = clearAllPhotos;
+window.exportReportJson = exportReportJson;
 window.generatePDFReport = generatePDFReport;
 window.updateFloorInfo = () => updateFloorInfo('floorSelect', state.floors, 'floorDetailType', 'floorDetailDates');
 
