@@ -4,8 +4,8 @@ import { savePhoto, loadPhotos, deletePhotoFromDB, clearPhotosInDB } from './sto
 
 const state = {
   currentAddressStr: 'Balneário Camboriú - SC',
-  currentLat: '-26.990000',
-  currentLng: '-48.630000',
+  currentLat: null,
+  currentLng: null,
   capturedPhotos: [],
   galleryUrls: [],
   pendingMeta: null,
@@ -121,46 +121,57 @@ function handleEnvironmentChange() {
   saveForm();
 }
 
+function setGeoText(coordText, addressText) {
+  const geoCoordinates = document.getElementById('geoCoordinates');
+  const geoAddress = document.getElementById('geoAddress');
+  if (geoCoordinates && coordText !== undefined) {
+    geoCoordinates.innerHTML = `<strong>GPS:</strong> ${escapeHtml(coordText)}`;
+  }
+  if (geoAddress && addressText !== undefined) {
+    geoAddress.innerHTML = `<strong>Endereço:</strong> ${escapeHtml(addressText)}`;
+  }
+}
+
 function getLocation() {
+  state.currentLat = null;
+  state.currentLng = null;
+  state.currentAddressStr = 'Endereço não identificado';
+
   if (!('geolocation' in navigator)) {
-    const geoCoordinates = document.getElementById('geoCoordinates');
-    if (geoCoordinates) geoCoordinates.innerHTML = '<strong>GPS:</strong> Geolocalização indisponível';
+    setGeoText('Geolocalização indisponível', state.currentAddressStr);
     return;
   }
 
-  const geoCoordinates = document.getElementById('geoCoordinates');
-  if (geoCoordinates) geoCoordinates.innerHTML = '<strong>GPS:</strong> Capturando...';
+  setGeoText('Capturando...', '—');
 
   navigator.geolocation.getCurrentPosition(async (pos) => {
     state.currentLat = pos.coords.latitude.toFixed(6);
     state.currentLng = pos.coords.longitude.toFixed(6);
-
-    if (geoCoordinates) {
-      geoCoordinates.innerHTML = `<strong>GPS:</strong> ${state.currentLat}, ${state.currentLng}`;
-    }
+    setGeoText(`${state.currentLat}, ${state.currentLng}`, 'Buscando endereço...');
 
     try {
-      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${state.currentLat}&lon=${state.currentLng}`);
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${state.currentLat}&lon=${state.currentLng}`
+      );
+      if (!response.ok) throw new Error('Falha na geocodificação reversa');
       const data = await response.json();
-      const rua = data.address?.road || data.address?.pedestrian || 'Rua 1500';
-      const cidade = data.address?.city || data.address?.town || 'Balneário Camboriú';
-      const uf = data.address?.state_code || 'SC';
-      state.currentAddressStr = `${rua}, ${cidade} - ${uf}`;
 
-      const geoAddress = document.getElementById('geoAddress');
-      if (geoAddress) geoAddress.innerHTML = `<strong>Endereço:</strong> ${state.currentAddressStr}`;
+      const rua = data.address?.road || data.address?.pedestrian || '';
+      const cidade = data.address?.city || data.address?.town || data.address?.village || '';
+      const uf = (data.address?.['ISO3166-2-lvl4'] || '').split('-')[1] || '';
+
+      const partes = [rua, [cidade, uf].filter(Boolean).join(' - ')].filter(Boolean);
+      state.currentAddressStr = partes.length ? partes.join(', ') : 'Endereço não identificado';
     } catch (error) {
-      state.currentAddressStr = 'Balneário Camboriú - SC';
-      const geoAddress = document.getElementById('geoAddress');
-      if (geoAddress) geoAddress.innerHTML = `<strong>Endereço:</strong> ${state.currentAddressStr}`;
-    }
-  }, () => {
-    if (geoCoordinates) {
-      geoCoordinates.innerHTML = `<strong>GPS:</strong> ${state.currentLat}, ${state.currentLng} (Aproximado)`;
+      state.currentAddressStr = 'Endereço não identificado';
     }
 
-    const geoAddress = document.getElementById('geoAddress');
-    if (geoAddress) geoAddress.innerHTML = `<strong>Endereço:</strong> ${state.currentAddressStr}`;
+    setGeoText(`${state.currentLat}, ${state.currentLng}`, state.currentAddressStr);
+  }, () => {
+    state.currentLat = null;
+    state.currentLng = null;
+    state.currentAddressStr = 'Endereço não identificado';
+    setGeoText('GPS indisponível (permissão negada ou sinal fraco)', state.currentAddressStr);
   }, { enableHighAccuracy: true, timeout: 8000 });
 }
 
