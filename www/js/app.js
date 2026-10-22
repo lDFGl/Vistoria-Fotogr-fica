@@ -3,7 +3,7 @@ import { loadFloors, populateFloors, updateFloorInfo } from './floors.js';
 import { savePhoto, loadPhotos, deletePhotoFromDB, clearPhotosInDB } from './storage.js';
 
 const state = {
-  currentAddressStr: 'Balneário Camboriú - SC',
+  currentAddressStr: 'Endereço não identificado',
   currentLat: null,
   currentLng: null,
   capturedPhotos: [],
@@ -128,7 +128,7 @@ function setGeoText(coordText, addressText) {
     geoCoordinates.innerHTML = `<strong>GPS:</strong> ${escapeHtml(coordText)}`;
   }
   if (geoAddress && addressText !== undefined) {
-    geoAddress.innerHTML = `<strong>Endereço:</strong> ${escapeHtml(addressText)}`;
+    geoAddress.innerHTML = `<strong>Endereço da Obra:</strong> ${escapeHtml(addressText)}`;
   }
 }
 
@@ -405,8 +405,8 @@ function exportReportJson() {
       env: item.env,
       notes: item.notes,
       location: item.location,
-      lat: item.lat,
-      lng: item.lng,
+      lat: item.lat ?? 'indisponível',
+      lng: item.lng ?? 'indisponível',
       timestamp: item.timestamp
     }))
   };
