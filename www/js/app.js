@@ -1,6 +1,11 @@
-function exportImagesBackup() {
+function exportReportJson() {
   if (state.capturedPhotos.length === 0) {
-    alert('Adicione pelo menos uma foto antes de fazer o backup das imagens.');
+    alert('Adicione pelo menos uma foto antes de gerar o backup das imagens.');
+    return;
+  }
+
+  if (!window.JSZip) {
+    alert('Biblioteca de backup não carregada. Tente recarregar a página.');
     return;
   }
 
@@ -10,13 +15,27 @@ function exportImagesBackup() {
 
   const zip = new JSZip();
   const photosFolder = 'fotos';
+
+  const normalizeName = (value, fallback) => {
+    const cleaned = String(value || fallback)
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .trim();
+
+    return cleaned || fallback;
+  };
+
   const report = {
     empreendimento: building,
     auditor: inspector,
     setor: sector,
     data: new Date().toISOString(),
     fotos: state.capturedPhotos.map((item, index) => {
-      const fileName = `${String(index + 1).padStart(2, '0')}_${(item.floor || 'pavimento').replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'pavimento'}_${(item.env || 'ambiente').replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'ambiente'}.jpg`;
+      const safeFloor = normalizeName(item.floor, 'pavimento');
+      const safeEnv = normalizeName(item.env, 'ambiente');
+      const fileName = `${String(index + 1).padStart(2, '0')}_${safeFloor}_${safeEnv}.jpg`;
 
       return {
         id: item.id,
@@ -35,22 +54,25 @@ function exportImagesBackup() {
   zip.file('relatorio.json', JSON.stringify(report, null, 2));
 
   state.capturedPhotos.forEach((item, index) => {
-    const safeName = `${String(index + 1).padStart(2, '0')}_${(item.floor || 'pavimento').replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'pavimento'}_${(item.env || 'ambiente').replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'ambiente'}.jpg`;
-    zip.file(`${photosFolder}/${safeName}`, item.blob);
+    const safeFloor = normalizeName(item.floor, 'pavimento');
+    const safeEnv = normalizeName(item.env, 'ambiente');
+    const fileName = `${String(index + 1).padStart(2, '0')}_${safeFloor}_${safeEnv}.jpg`;
+    zip.file(`${photosFolder}/${fileName}`, item.blob);
   });
 
-  zip.generateAsync({ type: 'blob' }).then((blob) => {
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `Backup_Imagens_${building.replace(/\s+/g, '_')}.zip`;
-    anchor.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }).catch((error) => {
-    console.error(error);
-    alert('Não foi possível gerar o backup das imagens.');
-  });
+  zip.generateAsync({ type: 'blob' })
+    .then((blob) => {
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `Backup_Imagens_${building.replace(/\s+/g, '_')}.zip`;
+      anchor.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    })
+    .catch((error) => {
+      console.error(error);
+      alert('Não foi possível gerar o backup das imagens.');
+    });
 }
 
-window.exportImagesBackup = exportImagesBackup;
-window.exportReportJson = exportImagesBackup;
+window.exportReportJson = exportReportJson;
